@@ -4,7 +4,7 @@ module.exports = {
     entry: './src/main.ts',
     output: {
         filename: 'bundle.js',
-        path: path.resolve(__dirname, 'dist'),
+        path: path.resolve(__dirname, 'docs'),
         publicPath: '/'
     },
     mode: 'development',
@@ -23,7 +23,7 @@ module.exports = {
     },
     devServer: {
         static: {
-            directory: path.join(__dirname, 'dist')
+            directory: path.join(__dirname, 'docs')
         },
         open: true,
         hot: true,
