@@ -1,6 +1,0 @@
-{
-	"watch": ["src"],
-	"ext": "ts",
-	"ignore": ["src/**/*.spec.ts", "docs/**/*"],
-	"exec": "tsc && echo 'Transpilation complete!'"
-}
