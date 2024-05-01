@@ -59,13 +59,24 @@
 					<!-- プロパティエリア -->
 					<div id="menu" class="bg-light border p-3 full-height">
 						<!-- クリアボタン -->
-						<button id="clearGraphButton" class="btn btn-danger my-2">グラフ初期化</button>
+						<button id="initGraphButton" class="btn btn-danger my-2">グラフ初期化</button>
+						<!-- グラフ情報 -->
 						<div class="statistics">
 							<p id="vertexDisplay">頂点の数: 0</p>
 							<p id="edgeDisplay">辺の数: 0</p>
 							<p id="isMaxGraphDisplay">極大平面グラフか: NO</p>
 							<p id="maxGraphEdgeDisplay">辺の数が 0 足りません</p>
 						</div>
+						<!-- インデックス表示のチェックボックス -->
+						<label>
+							<input type="checkbox" id="showIndexCheckbox" />
+							頂点番号を表示する
+						</label>
+						<!-- 次数表示のチェックボックス -->
+						<label>
+							<input type="checkbox" id="showDegreeCheckbox" />
+							次数を表示する
+						</label>
 						<!-- 辺を直線化するボタン -->
 						<button id="straightenEdgesButton" class="btn btn-primary my-2">すべての辺を直線にする</button>
 						<span>

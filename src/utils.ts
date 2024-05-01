@@ -1,12 +1,40 @@
+import Swal from "sweetalert2";
 import { Control } from "./object/Control";
 import { Edge } from "./object/Edge";
 import { Point } from "./object/Point";
 import { Vertex } from "./object/Vertex";
+// ============================================================================
+// 列挙体
+// ============================================================================
+// マウスボタンの列挙体
+export enum MouseButton {
+	Left = 0,
+	Middle = 1,
+	Right = 2,
+}
 
 // ============================================================================
 // ユーティリティクラス
 // ============================================================================
 export class Utils {
+	// 確認ダイアログを表示してアクションを実行
+	static confirmAction(message: string, action: () => void) {
+		Swal.fire({
+			title: "確認",
+			text: message,
+			icon: "warning",
+			showCancelButton: true,
+			confirmButtonColor: "#3085d6",
+			cancelButtonColor: "#d33",
+			confirmButtonText: "はい、実行します",
+			cancelButtonText: "いいえ",
+		}).then((result) => {
+			if (result.isConfirmed) {
+				action();
+			}
+		});
+	}
+
 	// 位置に近い点を取得する
 	static findPointAt(x: number, y: number, vertices: Vertex[], edges: Edge[]): Point | null {
 		// 頂点を検索

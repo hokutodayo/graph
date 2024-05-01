@@ -27,6 +27,7 @@ export class Control extends Point {
 		this.init();
 	}
 
+	// 初期化
 	init() {
 		this.x = (this.from.x + this.to.x) / 2;
 		this.y = (this.from.y + this.to.y) / 2 - Control.ADJUST_VIEW;
@@ -46,6 +47,7 @@ export class Control extends Point {
 		return new Position(x, y);
 	}
 
+	// 描画
 	draw(ctx: CanvasRenderingContext2D): void {
 		ctx.fillStyle = "red";
 		ctx.beginPath();

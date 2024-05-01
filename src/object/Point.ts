@@ -12,6 +12,7 @@ export class Point extends Position {
 		this.radius = 4;
 	}
 
+	// 範囲内か
 	isNear(x: number, y: number): boolean {
 		return Math.hypot(this.x - x, this.y - y) < this.radius * 2;
 	}

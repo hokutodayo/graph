@@ -1,7 +1,11 @@
 // ============================================================================
 // 次数配列クラス
+
+import { Vertex } from "./object/Vertex";
+
 // ============================================================================
 export class DegreeSequence {
+	// 次数配列
 	private sequence: number[];
 
 	constructor() {
@@ -19,6 +23,12 @@ export class DegreeSequence {
 	}
 
 	// 入力文字から配列にセットする
+	setVertices(vertices: Vertex[]): void {
+		this.sequence = vertices.map((vertex) => vertex.getDegree());
+		this.sequence.sort((a, b) => b - a);
+	}
+
+	// 入力文字から配列にセットする
 	setValue(value: String): void {
 		let cleanedValue = value
 			.replace(/([,*])\1+/g, "$1") // 連続するカンマやアスタリスクを一つにする
@@ -31,7 +41,7 @@ export class DegreeSequence {
 			this.sequence = this.arrayStringToSequence(cleanedValue);
 		}
 		// ソート
-		this.sequence = this.arrangeSequence(this.sequence);
+		this.sequence.sort((a, b) => b - a);
 	}
 
 	// ランレングス圧縮形式の文字列を配列に変換
@@ -81,24 +91,6 @@ export class DegreeSequence {
 		// 最後の要素を追加
 		result.push(`${current}*${count}`);
 		return result.join(", ");
-	}
-
-	// 配列を特定のパターンで再配置
-	arrangeSequence(sequence: number[]): number[] {
-		sequence.sort((a, b) => a - b);
-		let arranged = [];
-		let addLast = true;
-
-		for (const num of sequence) {
-			if (addLast) {
-				arranged.push(num);
-			} else {
-				arranged.unshift(num);
-			}
-			addLast = !addLast;
-		}
-
-		return arranged;
 	}
 
 	// 極大平面グラフかどうかを検証

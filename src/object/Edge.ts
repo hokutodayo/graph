@@ -30,7 +30,7 @@ export class Edge {
 		this.control.init();
 	}
 
-	// マウスの座標がこの辺に近いか判定
+	// 範囲内か
 	isNear(mouseX: number, mouseY: number, tolerance: number = 10): boolean {
 		const calcPosition = this.control.getCalcPosition();
 		// ベジェ曲線を分割して近似
@@ -47,12 +47,14 @@ export class Edge {
 		return false;
 	}
 
+	// ペジェ曲線の分割点
 	private getBezierPosition(t: number, calcPosition: Position): Position {
 		const x = (1 - t) * (1 - t) * this.from.x + 2 * (1 - t) * t * calcPosition.x + t * t * this.to.x;
 		const y = (1 - t) * (1 - t) * this.from.y + 2 * (1 - t) * t * calcPosition.y + t * t * this.to.y;
 		return new Position(x, y);
 	}
 
+	// 点と直線の距離
 	private pointToSegmentDistance(px: number, py: number, x1: number, y1: number, x2: number, y2: number): number {
 		const dx = x2 - x1;
 		const dy = y2 - y1;
@@ -66,6 +68,7 @@ export class Edge {
 		return Math.sqrt((px - nearestX) ** 2 + (py - nearestY) ** 2);
 	}
 
+	// 描画
 	draw(ctx: CanvasRenderingContext2D): void {
 		ctx.beginPath();
 		ctx.moveTo(this.from.x, this.from.y);

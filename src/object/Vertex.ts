@@ -19,19 +19,23 @@ export class Vertex extends Point {
 		this.edges = [];
 	}
 
+	// 辺を追加
 	addEdge(edge: Edge): void {
 		this.edges.push(edge);
 	}
 
+	// 辺を削除
 	deleteEdge(edge: Edge): void {
 		this.edges = this.edges.filter((tempEdge) => tempEdge !== edge);
 	}
 
+	// 次数取得
 	getDegree(): number {
 		return this.edges.length;
 	}
 
-	draw(ctx: CanvasRenderingContext2D): void {
+	// 描画
+	draw(ctx: CanvasRenderingContext2D, showIndex: boolean, index: number, showDegree: boolean): void {
 		ctx.beginPath();
 		ctx.arc(this.x, this.y, this.radius, 0, 2 * Math.PI);
 		ctx.fillStyle = "rgba(255, 100, 150, 1)";
@@ -39,5 +43,15 @@ export class Vertex extends Point {
 		ctx.strokeStyle = this.isSelected ? "red" : "rgba(135, 206, 250, 0.85)";
 		ctx.lineWidth = 4;
 		ctx.stroke();
+
+		// 頂点情報の表示
+		ctx.fillStyle = "black";
+		ctx.font = "12px Sans-serif";
+		if (showIndex) {
+			ctx.fillText(`Index: ${index + 1}`, this.x + this.radius + 5, this.y - this.radius - 5);
+		}
+		if (showDegree) {
+			ctx.fillText(`Degree: ${this.getDegree()}`, this.x + this.radius + 5, this.y - this.radius + 15);
+		}
 	}
 }

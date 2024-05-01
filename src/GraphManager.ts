@@ -1,18 +1,9 @@
+import { DegreeSequence } from "./DegreeSequence ";
 import { Control } from "./object/Control";
 import { Edge } from "./object/Edge";
 import { Point } from "./object/Point";
 import { Vertex } from "./object/Vertex";
-import { Utils } from "./utils";
-
-// ============================================================================
-// 列挙体
-// ============================================================================
-// マウスボタンの列挙体
-enum MouseButton {
-	Left = 0,
-	Middle = 1,
-	Right = 2,
-}
+import { MouseButton, Utils } from "./utils";
 
 // ============================================================================
 // インターフェース
@@ -38,6 +29,7 @@ export class GraphManager {
 	// オブジェクト管理
 	public vertices: Vertex[] = [];
 	public edges: Edge[] = [];
+	public degrees: DegreeSequence;
 	// オブジェクト操作
 	private selectedVertex: Vertex | null = null;
 	private selectedEdge: Edge | null = null;
@@ -52,11 +44,17 @@ export class GraphManager {
 	private isDragging = false;
 	private lastPos = { x: 0, y: 0 };
 	// コールバック関数
+	private updateDegreeSequence: (vertices: Vertex[]) => void;
 	private updateInfo: (info: GraphInfo) => void;
+	// 頂点情報表示
+	private showIndex: boolean = false;
+	private showDegree: boolean = false;
 
-	constructor(canvas: HTMLCanvasElement, updateInfo: (info: GraphInfo) => void) {
+	constructor(canvas: HTMLCanvasElement, updateDegreeSequence: (vertices: Vertex[]) => void, updateInfo: (info: GraphInfo) => void) {
 		this.canvas = canvas;
 		this.ctx = this.canvas.getContext("2d")!;
+		this.degrees = new DegreeSequence();
+		this.updateDegreeSequence = updateDegreeSequence;
 		this.updateInfo = updateInfo;
 		this.setupEvents();
 		this.resizeCanvas();
@@ -263,6 +261,8 @@ export class GraphManager {
 	private addVertex(x: number, y: number): Vertex {
 		const vertex = new Vertex(x, y);
 		this.vertices.push(vertex);
+		// 次数配列の更新
+		this.updateDegreeSequence(this.vertices);
 		return vertex;
 	}
 
@@ -276,6 +276,8 @@ export class GraphManager {
 		deleteEdges.forEach((edge) => {
 			this.deleteEdge(edge);
 		});
+		// 次数配列の更新
+		this.updateDegreeSequence(this.vertices);
 	}
 
 	// 辺を追加する
@@ -286,17 +288,13 @@ export class GraphManager {
 			const duplicateEdge = this.edges.find((edge) => (edge.from === from && edge.to === to) || (edge.from === to && edge.to === from));
 			// 重複辺は削除
 			if (duplicateEdge) {
-				this.edges = this.edges.filter((edge) => edge !== duplicateEdge);
-				// 辺に接続している頂点から削除する
-				from.deleteEdge(duplicateEdge);
-				to.deleteEdge(duplicateEdge);
+				this.deleteEdge(duplicateEdge);
 			}
 			// 新しい辺を追加
 			const edge = new Edge(from, to);
 			this.edges.push(edge);
-			// 頂点に辺を追加
-			from.addEdge(edge);
-			to.addEdge(edge);
+			// 次数配列の更新
+			this.updateDegreeSequence(this.vertices);
 			return edge;
 		}
 		return null;
@@ -309,6 +307,8 @@ export class GraphManager {
 		edge.to.deleteEdge(edge);
 		// 辺オブジェクト配列から、辺を削除
 		this.edges = this.edges.filter((tempEdge) => tempEdge !== edge);
+		// 次数配列の更新
+		this.updateDegreeSequence(this.vertices);
 	}
 
 	// キャンバスの移動制限
@@ -347,7 +347,16 @@ export class GraphManager {
 		this.activeEdge = null;
 		this.isDragging = false;
 		this.lastPos = { x: 0, y: 0 };
+		// 次数配列の更新
+		this.updateDegreeSequence(this.vertices);
 		this.resizeCanvas();
+	}
+
+	// 頂点情報の表示切り替え
+	drawVertexInfo(showIndex: boolean, showDegree: boolean): void {
+		this.showIndex = showIndex;
+		this.showDegree = showDegree;
+		this.drawGraph();
 	}
 
 	// 辺をすべて直線にする
@@ -355,6 +364,8 @@ export class GraphManager {
 		for (let edge of this.edges) {
 			edge.straightenEdge();
 		}
+		// 次数配列の更新
+		this.updateDegreeSequence(this.vertices);
 		this.drawGraph();
 	}
 
@@ -367,12 +378,12 @@ export class GraphManager {
 			return;
 		}
 
-		const gridSize = 100; // グリッドの間隔
+		const gridSize = 100;
 		const gridCountX = Math.ceil(this.MAX_CANVAS_WIDTH / gridSize);
 		const gridCountY = Math.ceil(this.MAX_CANVAS_HEIGHT / gridSize);
 
 		this.ctx.save();
-		this.ctx.strokeStyle = "#e0e0e0"; // グリッド線の色
+		this.ctx.strokeStyle = "#e0e0e0";
 		this.ctx.lineWidth = 1;
 
 		// グリッド線を描画
@@ -413,7 +424,7 @@ export class GraphManager {
 			}
 		});
 		// 頂点の描画
-		this.vertices.forEach((vertex) => vertex.draw(this.ctx));
+		this.vertices.forEach((vertex, index) => vertex.draw(this.ctx, this.showIndex, index, this.showDegree));
 		this.ctx.restore();
 
 		// 画面上の情報更新
@@ -470,5 +481,7 @@ export class GraphManager {
 			edge.control.y = eData.control.y;
 			return edge;
 		});
+		// 次数配列の更新
+		this.updateDegreeSequence(this.vertices);
 	}
 }

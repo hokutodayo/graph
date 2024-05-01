@@ -17,6 +17,7 @@ export class Box extends Position {
 		this.height = height;
 	}
 
+	// 範囲内か
 	isNear(x: number, y: number): boolean {
 		const inX = this.x - Box.MARGIN <= x && x <= this.x + this.width + Box.MARGIN;
 		const inY = this.y - Box.MARGIN <= y && y <= this.y + this.height + Box.MARGIN;
