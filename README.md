@@ -17,9 +17,16 @@
      ```
 
 3. **Webpack のインストール**
+
    - Yarn を使用して Webpack をインストールします：
      ```
      yarn add webpack webpack-cli --dev
+     ```
+
+4. **SweetAlert2 のインストール**
+   - アラート、ポップアップ、通知のために SweetAlert2 をインストールします：
+     ```
+     yarn add sweetalert2
      ```
 
 ### コマンド

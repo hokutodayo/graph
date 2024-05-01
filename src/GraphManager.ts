@@ -99,15 +99,8 @@ export class GraphManager {
 			const dy = e.clientY - this.lastPos.y;
 			this.origin.x += dx;
 			this.origin.y += dy;
-
 			// 移動制限
-			const maxX = this.MAX_CANVAS_WIDTH * this.scale - this.canvas.width;
-			const maxY = this.MAX_CANVAS_HEIGHT * this.scale - this.canvas.height;
-			this.origin.x = this.origin.x + maxX < 0 ? -maxX : this.origin.x;
-			this.origin.y = this.origin.y + maxY < 0 ? -maxY : this.origin.y;
-			this.origin.x = 0 < this.origin.x ? 0 : this.origin.x;
-			this.origin.y = 0 < this.origin.y ? 0 : this.origin.y;
-
+			this.limitCanvasPan();
 			this.lastPos.x = e.clientX;
 			this.lastPos.y = e.clientY;
 		}
@@ -240,12 +233,7 @@ export class GraphManager {
 			this.scale = newScale;
 
 			// 移動制限
-			const maxX = this.MAX_CANVAS_WIDTH * this.scale - this.canvas.width;
-			const maxY = this.MAX_CANVAS_HEIGHT * this.scale - this.canvas.height;
-			this.origin.x = this.origin.x + maxX < 0 ? -maxX : this.origin.x;
-			this.origin.y = this.origin.y + maxY < 0 ? -maxY : this.origin.y;
-			this.origin.x = 0 < this.origin.x ? 0 : this.origin.x;
-			this.origin.y = 0 < this.origin.y ? 0 : this.origin.y;
+			this.limitCanvasPan();
 		}
 
 		this.drawGraph();
@@ -323,6 +311,16 @@ export class GraphManager {
 		this.edges = this.edges.filter((tempEdge) => tempEdge !== edge);
 	}
 
+	// キャンバスの移動制限
+	private limitCanvasPan(): void {
+		const maxX = this.MAX_CANVAS_WIDTH * this.scale - this.canvas.width;
+		const maxY = this.MAX_CANVAS_HEIGHT * this.scale - this.canvas.height;
+		this.origin.x = this.origin.x + maxX < 0 ? -maxX : this.origin.x;
+		this.origin.y = this.origin.y + maxY < 0 ? -maxY : this.origin.y;
+		this.origin.x = 0 < this.origin.x ? 0 : this.origin.x;
+		this.origin.y = 0 < this.origin.y ? 0 : this.origin.y;
+	}
+
 	// リサイズ
 	private resizeCanvas(): void {
 		this.canvas.width = window.innerWidth * 0.8;
@@ -335,6 +333,28 @@ export class GraphManager {
 		this.origin.x = -this.origin.x * this.scale;
 		this.origin.y = -this.origin.y * this.scale;
 
+		this.drawGraph();
+	}
+
+	// グラフの初期化
+	initGraph(): void {
+		this.vertices = [];
+		this.edges = [];
+		this.initSelected();
+		this.scale = 1;
+		this.currentZoomIndex = 10;
+		this.draggingPoint = null;
+		this.activeEdge = null;
+		this.isDragging = false;
+		this.lastPos = { x: 0, y: 0 };
+		this.resizeCanvas();
+	}
+
+	// 辺をすべて直線にする
+	straightenEdges(): void {
+		for (let edge of this.edges) {
+			edge.straightenEdge();
+		}
 		this.drawGraph();
 	}
 
@@ -413,5 +433,42 @@ export class GraphManager {
 		this.ctx.fillStyle = "black";
 		this.ctx.fillText(zoomText, 10, this.canvas.height - 10);
 		this.ctx.restore();
+	}
+
+	// ============================================================================
+	// エクスポート／インポート処理
+	// ============================================================================
+	// グラフの状態をJSONとしてエクスポート
+	exportToJson(): string {
+		const exportData = {
+			vertices: this.vertices.map((vertex, index) => ({
+				id: index,
+				x: vertex.x,
+				y: vertex.y,
+			})),
+			edges: this.edges.map((edge) => ({
+				from: this.vertices.indexOf(edge.from),
+				to: this.vertices.indexOf(edge.to),
+				control: {
+					x: edge.control.x,
+					y: edge.control.y,
+				},
+			})),
+		};
+		return JSON.stringify(exportData);
+	}
+
+	// JSONからグラフの状態をインポート
+	importFromJson(jsonString: string): void {
+		const importData = JSON.parse(jsonString);
+		this.vertices = importData.vertices.map((vData: any) => new Vertex(vData.x, vData.y));
+		this.edges = importData.edges.map((eData: any) => {
+			const fromVertex = this.vertices[eData.from];
+			const toVertex = this.vertices[eData.to];
+			const edge = new Edge(fromVertex, toVertex);
+			edge.control.x = eData.control.x;
+			edge.control.y = eData.control.y;
+			return edge;
+		});
 	}
 }

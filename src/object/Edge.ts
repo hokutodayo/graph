@@ -25,6 +25,11 @@ export class Edge {
 		this.to.addEdge(this);
 	}
 
+	// 辺を直線にする
+	straightenEdge() {
+		this.control.init();
+	}
+
 	// マウスの座標がこの辺に近いか判定
 	isNear(mouseX: number, mouseY: number, tolerance: number = 10): boolean {
 		const calcPosition = this.control.getCalcPosition();

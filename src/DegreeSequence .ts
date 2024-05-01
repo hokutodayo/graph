@@ -83,17 +83,6 @@ export class DegreeSequence {
 		return result.join(", ");
 	}
 
-	// 極大平面グラフかどうかを検証
-	isMaximalPlanarGraph(): boolean {
-		const n = this.sequence.length;
-		const totalDegree = this.sequence.reduce((sum, degree) => sum + degree, 0);
-		const expectedEdges = 3 * n - 6;
-
-		if (n < 3) return false;
-		if (totalDegree !== 2 * expectedEdges) return false;
-		return true;
-	}
-
 	// 配列を特定のパターンで再配置
 	arrangeSequence(sequence: number[]): number[] {
 		sequence.sort((a, b) => a - b);
@@ -110,5 +99,42 @@ export class DegreeSequence {
 		}
 
 		return arranged;
+	}
+
+	// 極大平面グラフかどうかを検証
+	isMaximalPlanarGraph(): boolean {
+		if (!this.isValidDegreeSequence()) {
+			return false;
+		}
+
+		const n = this.sequence.length;
+		const totalDegree = this.sequence.reduce((sum, degree) => sum + degree, 0);
+		const expectedEdges = 3 * n - 6;
+
+		if (n < 3) return false;
+		if (totalDegree !== 2 * expectedEdges) return false;
+		return true;
+	}
+
+	// ハベル・ハキミの定理を用いて次数配列がグラフになるかチェック
+	isValidDegreeSequence(): boolean {
+		let degrees = [...this.sequence].sort((a, b) => b - a);
+
+		while (degrees.length > 0 && degrees[0] > 0) {
+			let first = degrees.shift()!;
+			if (first > degrees.length) {
+				return false;
+			}
+
+			for (let i = 0; i < first; i++) {
+				degrees[i]--;
+				if (degrees[i] < 0) {
+					return false;
+				}
+			}
+			degrees = degrees.sort((a, b) => b - a);
+		}
+
+		return degrees.every((degree) => degree === 0);
 	}
 }

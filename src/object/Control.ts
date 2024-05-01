@@ -24,8 +24,12 @@ export class Control extends Point {
 		this.to = to;
 		this.edge = edge;
 		// 中点の座標にする
-		this.x = (from.x + to.x) / 2;
-		this.y = (from.y + to.y) / 2 - Control.ADJUST_VIEW;
+		this.init();
+	}
+
+	init() {
+		this.x = (this.from.x + this.to.x) / 2;
+		this.y = (this.from.y + this.to.y) / 2 - Control.ADJUST_VIEW;
 	}
 
 	// 計算用の制御点座標（ペジェ曲線算出用）
