@@ -72,6 +72,18 @@ export class Edge {
 	draw(ctx: CanvasRenderingContext2D): void {
 		ctx.beginPath();
 		ctx.moveTo(this.from.x, this.from.y);
+		ctx.lineTo(this.to.x, this.to.y);
+		ctx.strokeStyle = this.isSelected ? "red" : "rgba(135, 206, 250, 0.85)";
+		ctx.lineWidth = 4;
+		ctx.stroke();
+
+		this.control.init();
+	}
+
+	// 描画（ペジェ曲線）
+	drawBezier(ctx: CanvasRenderingContext2D): void {
+		ctx.beginPath();
+		ctx.moveTo(this.from.x, this.from.y);
 		// 二次ベジェ曲線
 		const calcPosition = this.control.getCalcPosition();
 		ctx.quadraticCurveTo(calcPosition.x, calcPosition.y, this.to.x, this.to.y);

@@ -24,6 +24,8 @@ export class GraphManager {
 	private ctx: CanvasRenderingContext2D;
 	// グリッド表示状態
 	private showGrid: boolean = true;
+	// 力指向モード
+	private forceDirectMode: boolean = true;
 	// マウス位置
 	private mouse: { x: number; y: number } = { x: 0, y: 0 };
 	// オブジェクト管理
@@ -73,6 +75,7 @@ export class GraphManager {
 		this.canvas.addEventListener("contextmenu", this.handleContextMenu.bind(this));
 		this.canvas.addEventListener("wheel", this.handleWheel.bind(this));
 		window.addEventListener("resize", this.resizeCanvas.bind(this));
+		this.changeForceDirectMode(this.forceDirectMode);
 	}
 
 	// ダブルクリック
@@ -415,14 +418,17 @@ export class GraphManager {
 		// グリッドの描画
 		this.drawGrid();
 
-		// 辺の描画
-		this.edges.forEach((edge) => {
-			edge.draw(this.ctx);
-			// マウスの近くの辺の制御点とドラッグ中の制御点を描画
-			if (edge === this.activeEdge || (this.draggingPoint && this.draggingPoint === edge.control)) {
-				edge.control.draw(this.ctx);
-			}
-		});
+		// 力指向モードによって辺の描画を切り替える
+		if (this.forceDirectMode) {
+			// 辺の描画
+			this.edges.forEach((edge) => edge.draw(this.ctx));
+		} else {
+			// 辺の描画
+			this.edges.forEach((edge) => edge.drawBezier(this.ctx));
+			// 制御点の描画
+			this.activeEdge && this.activeEdge.control.draw(this.ctx);
+			this.draggingPoint instanceof Control && this.draggingPoint.draw(this.ctx);
+		}
 		// 頂点の描画
 		this.vertices.forEach((vertex, index) => vertex.draw(this.ctx, this.showIndex, index, this.showDegree));
 		this.ctx.restore();
@@ -444,6 +450,79 @@ export class GraphManager {
 		this.ctx.fillStyle = "black";
 		this.ctx.fillText(zoomText, 10, this.canvas.height - 10);
 		this.ctx.restore();
+	}
+
+	// ============================================================================
+	// 力指向アルゴリズム
+	// ============================================================================
+	private intervalId: NodeJS.Timeout | null = null;
+
+	// 力指向モードのON/OFF
+	changeForceDirectMode(forceDirectMode: boolean): void {
+		this.forceDirectMode = forceDirectMode;
+		if (this.forceDirectMode) {
+			this.intervalId = setInterval(() => {
+				this.updateForceDirectedLayout();
+			}, 100);
+		} else if (this.intervalId) {
+			clearInterval(this.intervalId);
+			this.intervalId = null;
+		}
+	}
+
+	// 力指向レイアウトの更新
+	private updateForceDirectedLayout(): void {
+		// 斥力
+		const repulsionConstant = 30000;
+		// 引力
+		const attractionConstant = 10000;
+		const maxDisplacement = 50;
+		const minDistance = 10;
+
+		// 初期変位を0で設定
+		let displacements = this.vertices.map(() => ({ x: 0, y: 0 }));
+
+		// 斥力
+		this.vertices.forEach((from, i) => {
+			this.vertices.forEach((to, j) => {
+				if (i !== j) {
+					const dx = from.x - to.x;
+					const dy = from.y - to.y;
+					let distance = Math.sqrt(dx * dx + dy * dy);
+					distance = Math.max(distance, minDistance);
+					const force = repulsionConstant / (distance * distance);
+					displacements[i].x += (dx / distance) * force;
+					displacements[i].y += (dy / distance) * force;
+				}
+			});
+		});
+
+		// 引力
+		this.edges.forEach((edge) => {
+			const fromIndex = this.vertices.indexOf(edge.from);
+			const toIndex = this.vertices.indexOf(edge.to);
+			const dx = edge.from.x - edge.to.x;
+			const dy = edge.from.y - edge.to.y;
+			const distance = Math.sqrt(dx * dx + dy * dy);
+			const force = (distance * distance) / attractionConstant;
+			displacements[fromIndex].x -= (dx / distance) * force;
+			displacements[fromIndex].y -= (dy / distance) * force;
+			displacements[toIndex].x += (dx / distance) * force;
+			displacements[toIndex].y += (dy / distance) * force;
+		});
+
+		// 移動座標設定
+		displacements.forEach((displacement, index) => {
+			const scalar = Math.sqrt(displacement.x * displacement.x + displacement.y * displacement.y);
+			if (scalar > 0) {
+				const limitedDispX = (displacement.x / scalar) * Math.min(scalar, maxDisplacement);
+				const limitedDispY = (displacement.y / scalar) * Math.min(scalar, maxDisplacement);
+				this.vertices[index].x += Math.round(limitedDispX);
+				this.vertices[index].y += Math.round(limitedDispY);
+			}
+		});
+
+		this.drawGraph();
 	}
 
 	// ============================================================================

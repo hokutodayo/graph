@@ -102,11 +102,13 @@ function setup(): void {
 	const maxGraphEdgeDisplay = document.getElementById("maxGraphEdgeDisplay") as HTMLButtonElement;
 	const showIndexCheckbox = document.getElementById("showIndexCheckbox") as HTMLInputElement;
 	const showDegreeCheckbox = document.getElementById("showDegreeCheckbox") as HTMLInputElement;
+	const changeForceDirectModeButton = document.getElementById("changeForceDirectModeButton") as HTMLButtonElement;
 	const straightenEdgesButton = document.getElementById("straightenEdgesButton") as HTMLButtonElement;
 
 	initGraphButton.addEventListener("click", initGraph);
 	showIndexCheckbox.addEventListener("change", showIndex);
 	showDegreeCheckbox.addEventListener("change", showDegree);
+	changeForceDirectModeButton.addEventListener("click", changeForceDirectMode);
 	straightenEdgesButton.addEventListener("click", straightenEdges);
 
 	// グラフの初期化
@@ -150,6 +152,21 @@ function setup(): void {
 	// 次数を表示
 	function showDegree(e: Event) {
 		graphManager.drawVertexInfo(showIndexCheckbox.checked, showDegreeCheckbox.checked);
+	}
+
+	let forceDirectMode: boolean = true;
+
+	// 力指向モードを切り替える
+	function changeForceDirectMode(e: Event) {
+		forceDirectMode = !forceDirectMode;
+		graphManager.changeForceDirectMode(forceDirectMode);
+		if (forceDirectMode) {
+			changeForceDirectModeButton.textContent = "ペジェ曲線モードにする";
+			straightenEdgesButton.disabled = true;
+		} else {
+			changeForceDirectModeButton.textContent = "力指向モードにする";
+			straightenEdgesButton.disabled = false;
+		}
 	}
 
 	// すべての辺を直線にする
