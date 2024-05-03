@@ -144,19 +144,19 @@ function setup(): void {
 
 	// 頂点番号を表示
 	function showIndex(e: Event) {
-		graphManager.drawVertexInfo(showDegreeCheckbox.checked, showIndexCheckbox.checked);
+		graphManager.drawVertexInfo(showIndexCheckbox.checked, showDegreeCheckbox.checked);
 	}
 
 	// 次数を表示
 	function showDegree(e: Event) {
-		graphManager.drawVertexInfo(showDegreeCheckbox.checked, showIndexCheckbox.checked);
+		graphManager.drawVertexInfo(showIndexCheckbox.checked, showDegreeCheckbox.checked);
 	}
 
 	// すべての辺を直線にする
 	function straightenEdges(e: Event) {
 		Utils.confirmAction("すべての辺が直線になりますがよろしいですか？", () => {
 			graphManager.straightenEdges();
-			Swal.fire("実行完了!", "すべての辺が直線になりました。。", "success");
+			Swal.fire("実行完了!", "すべての辺が直線になりました。", "success");
 		});
 	}
 
@@ -208,7 +208,8 @@ function setup(): void {
 				const content = (event.target! as FileReader).result as string;
 				// 読み込んだJSONデータでグラフをインポート
 				graphManager.importFromJson(content);
-				console.log("Graph imported successfully");
+				// ファイル入力をリセット
+				importFileInput.value = "";
 			};
 			reader.readAsText(file);
 		}

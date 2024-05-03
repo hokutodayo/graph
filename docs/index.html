@@ -75,17 +75,21 @@
 							<p id="maxGraphEdgeDisplay">辺の数が 0 足りません</p>
 						</div>
 						<!-- インデックス表示のチェックボックス -->
-						<label>
-							<input type="checkbox" id="showIndexCheckbox" />
-							頂点番号を表示する
-						</label>
-						<!-- 次数表示のチェックボックス -->
-						<label>
-							<input type="checkbox" id="showDegreeCheckbox" />
-							次数を表示する
-						</label>
+						<div>
+							<label>
+								<input type="checkbox" id="showIndexCheckbox" />
+								頂点番号を表示する
+							</label>
+							<!-- 次数表示のチェックボックス -->
+							<label>
+								<input type="checkbox" id="showDegreeCheckbox" />
+								次数を表示する
+							</label>
+						</div>
 						<!-- 辺を直線化するボタン -->
-						<button id="straightenEdgesButton" class="btn btn-primary my-2">すべての辺を直線にする</button>
+						<div>
+							<button id="straightenEdgesButton" class="btn btn-primary my-2">すべての辺を直線にする</button>
+						</div>
 						<span>
 							<!-- エクスポートボタン -->
 							<button id="exportButton" class="btn btn-primary my-2">Export</button>

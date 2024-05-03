@@ -13,8 +13,8 @@ export class Box extends Position {
 
 	constructor(x: number, y: number, width: number, height: number) {
 		super(x, y);
-		this.width = width;
-		this.height = height;
+		this.width = Math.round(width);
+		this.height = Math.round(height);
 	}
 
 	// 範囲内か

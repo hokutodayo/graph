@@ -483,5 +483,6 @@ export class GraphManager {
 		});
 		// 次数配列の更新
 		this.updateDegreeSequence(this.vertices);
+		this.drawGraph();
 	}
 }
