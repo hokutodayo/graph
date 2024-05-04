@@ -429,6 +429,7 @@ export class GraphManager {
 			this.activeEdge && this.activeEdge.control.draw(this.ctx);
 			this.draggingPoint instanceof Control && this.draggingPoint.draw(this.ctx);
 		}
+
 		// 頂点の描画
 		this.vertices.forEach((vertex, index) => vertex.draw(this.ctx, this.showIndex, index, this.showDegree));
 		this.ctx.restore();
@@ -473,9 +474,9 @@ export class GraphManager {
 	// 力指向レイアウトの更新
 	private updateForceDirectedLayout(): void {
 		// 斥力
-		const repulsionConstant = 30000;
+		const repulsionConstant = 150;
 		// 引力
-		const attractionConstant = 10000;
+		const attractionConstant = 100;
 		const maxDisplacement = 50;
 		const minDistance = 10;
 
@@ -490,7 +491,7 @@ export class GraphManager {
 					const dy = from.y - to.y;
 					let distance = Math.sqrt(dx * dx + dy * dy);
 					distance = Math.max(distance, minDistance);
-					const force = repulsionConstant / (distance * distance);
+					const force = (repulsionConstant * repulsionConstant) / (distance * distance);
 					displacements[i].x += (dx / distance) * force;
 					displacements[i].y += (dy / distance) * force;
 				}
@@ -504,7 +505,7 @@ export class GraphManager {
 			const dx = edge.from.x - edge.to.x;
 			const dy = edge.from.y - edge.to.y;
 			const distance = Math.sqrt(dx * dx + dy * dy);
-			const force = (distance * distance) / attractionConstant;
+			const force = (distance * distance) / (attractionConstant * attractionConstant);
 			displacements[fromIndex].x -= (dx / distance) * force;
 			displacements[fromIndex].y -= (dy / distance) * force;
 			displacements[toIndex].x += (dx / distance) * force;

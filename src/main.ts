@@ -1,4 +1,3 @@
-import Swal from "sweetalert2";
 import { GraphInfo, GraphManager } from "./GraphManager";
 import { Vertex } from "./object/Vertex";
 import { Utils } from "./utils";
@@ -115,7 +114,6 @@ function setup(): void {
 	function initGraph(e: Event) {
 		Utils.confirmAction("グラフが初期化されますがよろしいですか？", () => {
 			graphManager.initGraph();
-			Swal.fire("実行完了!", "グラフが初期化されました。", "success");
 		});
 	}
 
@@ -173,7 +171,6 @@ function setup(): void {
 	function straightenEdges(e: Event) {
 		Utils.confirmAction("すべての辺が直線になりますがよろしいですか？", () => {
 			graphManager.straightenEdges();
-			Swal.fire("実行完了!", "すべての辺が直線になりました。", "success");
 		});
 	}
 
