@@ -10,14 +10,14 @@
 		<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/sweetalert2@11.10.8/dist/sweetalert2.min.css" />
 		<style>
 			/* ダブルクリックでテキストが選択されないようにする */
-			* {
+			.canvas-area {
 				user-select: none;
 			}
 			/* 画面全体の高さに合わせたスタイル */
 			.full-height {
 				height: 100vh; /* ビューポートの高さに基づく100% */
 			}
-			.canvas-area {
+			.main-area {
 				height: calc(100vh - 90px); /* ヘッダーと入力エリアの高さを引いた残りの高さ */
 			}
 			.overflow-hidden {
@@ -52,41 +52,41 @@
 					<input id="degreeSequenceInput" type="text" class="form-control" inputmode="decimal" placeholder="例: 4,4,4,3,3" />
 				</div>
 				<div class="col-auto">
-					<button id="applyDegreeSequence" class="btn btn-primary" onclick="applyDegreeSequence()">適用</button>
+					<button id="applyDegreeSequence" class="btn btn-primary">適用</button>
 				</div>
 			</div>
 
-			<!-- キャンバスとプロパティエリア -->
-			<div class="row canvas-area">
-				<div class="col-10">
-					<!-- キャンバスエリア -->
+			<!-- メインエリア -->
+			<div class="row main-area">
+				<!-- キャンバスエリア -->
+				<div class="col-10 canvas-area">
 					<canvas id="graphCanvas" class="border" width="1000" height="800"></canvas>
 				</div>
-				<div class="col-2">
-					<!-- プロパティエリア -->
+
+				<!-- プロパティエリア -->
+				<div class="col-2 property-area">
 					<div id="menu" class="bg-light border p-3 full-height">
 						<!-- クリアボタン -->
 						<button id="initGraphButton" class="btn btn-danger my-2">グラフ初期化</button>
+
 						<!-- グラフ情報 -->
 						<div class="statistics">
 							<p id="vertexDisplay">頂点の数: 0</p>
 							<p id="edgeDisplay">辺の数: 0</p>
-							<p id="isMaxGraphDisplay">極大平面グラフか: NO</p>
-							<p id="maxGraphEdgeDisplay">辺の数が 0 足りません</p>
+							<p id="graphStatusDisplay">グラフ: 平面グラフ</p>
+							<p id="maxGraphEdgeDisplay">辺数 0 追加可能</p>
+							<p id="hasK33Display">K3,3: -</p>
+							<p id="hasK5Display">K5: -</p>
 						</div>
-						<!-- インデックス表示のチェックボックス -->
+
 						<div>
-							<label>
-								<input type="checkbox" id="showIndexCheckbox" />
-								頂点番号を表示する
-							</label>
+							<!-- インデックス表示のチェックボックス -->
+							<label><input type="checkbox" id="showIndexCheckbox" checked="true" />頂点番号を表示する</label>
 							<!-- 次数表示のチェックボックス -->
-							<label>
-								<input type="checkbox" id="showDegreeCheckbox" />
-								次数を表示する
-							</label>
+							<label><input type="checkbox" id="showDegreeCheckbox" />次数を表示する</label>
 						</div>
-						<!-- 辺を直線化するボタン -->
+
+						<!-- モード変更するボタン -->
 						<div>
 							<button id="changeForceDirectModeButton" class="btn btn-primary my-2">ペジェ曲線モードにする</button>
 						</div>
@@ -94,6 +94,7 @@
 						<div>
 							<button id="straightenEdgesButton" class="btn btn-primary my-2" disabled>辺を直線にする</button>
 						</div>
+
 						<span>
 							<!-- エクスポートボタン -->
 							<button id="exportButton" class="btn btn-primary my-2">Export</button>

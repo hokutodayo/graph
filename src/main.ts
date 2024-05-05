@@ -1,4 +1,5 @@
 import { GraphInfo, GraphManager } from "./GraphManager";
+import { Edge } from "./object/Edge";
 import { Vertex } from "./object/Vertex";
 import { Utils } from "./utils";
 
@@ -60,15 +61,15 @@ function setup(): void {
 		} else {
 			degreesInput.value = graphManager.degrees.getRunLengthString();
 		}
-		// 極大平面グラフの検証
-		if (!graphManager.degrees.isMaximalPlanarGraph()) {
-			degreesInput.classList.add("is-invalid");
-			degreesInput.classList.remove("is-valid");
-			applyButton.disabled = true;
-		} else {
+		// 平面グラフ判定
+		if (graphManager.degrees.isPlanarGraph()) {
 			degreesInput.classList.remove("is-invalid");
 			degreesInput.classList.add("is-valid");
 			applyButton.disabled = false;
+		} else {
+			degreesInput.classList.add("is-invalid");
+			degreesInput.classList.remove("is-valid");
+			applyButton.disabled = true;
 		}
 	}
 
@@ -78,12 +79,12 @@ function setup(): void {
 		const inputValue = input.value;
 		console.log("入力された数式:", inputValue);
 
-		// ここに数式を解析してグラフを描画するロジックを追加
+		// TODO: グラフの生成
 	}
 
 	// 次数配列の更新
-	function updateDegreeSequence(vertices: Vertex[]): void {
-		graphManager.degrees.setVertices(vertices);
+	function updateDegreeSequence(vertices: Vertex[], edges: Edge[]): void {
+		graphManager.degrees.setVertices(vertices, edges);
 		if (isDegreeArray) {
 			degreesInput.value = graphManager.degrees.getArrayString();
 		} else {
@@ -95,10 +96,14 @@ function setup(): void {
 	// プロパティエリア
 	// ============================================================================
 	const initGraphButton = document.getElementById("initGraphButton") as HTMLButtonElement;
-	const vertexDisplay = document.getElementById("vertexDisplay") as HTMLSelectElement;
-	const edgeDisplay = document.getElementById("edgeDisplay") as HTMLButtonElement;
-	const isMaxGraphDisplay = document.getElementById("isMaxGraphDisplay") as HTMLSelectElement;
-	const maxGraphEdgeDisplay = document.getElementById("maxGraphEdgeDisplay") as HTMLButtonElement;
+	const vertexDisplay = document.getElementById("vertexDisplay") as HTMLElement;
+	const edgeDisplay = document.getElementById("edgeDisplay") as HTMLElement;
+
+	const graphStatusDisplay = document.getElementById("graphStatusDisplay") as HTMLElement;
+	const maxGraphEdgeDisplay = document.getElementById("maxGraphEdgeDisplay") as HTMLElement;
+	const hasK33Display = document.getElementById("hasK33Display") as HTMLElement;
+	const hasK5Display = document.getElementById("hasK5Display") as HTMLElement;
+
 	const showIndexCheckbox = document.getElementById("showIndexCheckbox") as HTMLInputElement;
 	const showDegreeCheckbox = document.getElementById("showDegreeCheckbox") as HTMLInputElement;
 	const changeForceDirectModeButton = document.getElementById("changeForceDirectModeButton") as HTMLButtonElement;
@@ -119,26 +124,59 @@ function setup(): void {
 
 	// オブジェクト情報の更新
 	function updateInfo(info: GraphInfo): void {
-		vertexDisplay.textContent = `頂点の数: ${info.vertexCount}`;
-		edgeDisplay.textContent = `辺の数: ${info.edgeCount}`;
+		vertexDisplay.textContent = `頂点の数: ${info.vertices.length}`;
+		edgeDisplay.textContent = `辺の数: ${info.edges.length}`;
 
-		if (info.vertexCount < 3) {
-			isMaxGraphDisplay.textContent = " - ";
+		if (info.vertices.length < 3) {
 			maxGraphEdgeDisplay.textContent = " - ";
 			return;
 		}
 
 		// 極大平面グラフ判定（ 3V - E = 6 ）
-		const result = 3 * info.vertexCount - info.edgeCount;
-		if (result > 6) {
-			isMaxGraphDisplay.textContent = `極大平面グラフか: NO`;
-			maxGraphEdgeDisplay.textContent = `辺の数が ${result - 6} 足りません`;
-		} else if (result == 6) {
-			isMaxGraphDisplay.textContent = `極大平面グラフか: YES`;
-			maxGraphEdgeDisplay.textContent = ` - `;
+		const result = 3 * info.vertices.length - info.edges.length;
+		// 非平面チェック結果
+		const k33 = info.degrees.resultK33;
+		const k5 = info.degrees.resultK5;
+
+		// グラフ状態
+		if (k33 || k5) {
+			graphStatusDisplay.textContent = "グラフ: 非平面グラフ";
+			graphStatusDisplay.style.color = "red";
+			graphStatusDisplay.style.fontWeight = "bold";
 		} else {
-			isMaxGraphDisplay.textContent = `極大平面グラフか: 非平面`;
-			maxGraphEdgeDisplay.textContent = `辺の数が ${6 - result} 多いです`;
+			if (result > 6) {
+				graphStatusDisplay.textContent = "グラフ: 平面グラフ";
+				graphStatusDisplay.style.color = "";
+				graphStatusDisplay.style.fontWeight = "";
+				maxGraphEdgeDisplay.textContent = `辺数 ${result - 6} 追加可能`;
+			} else if (result == 6) {
+				graphStatusDisplay.textContent = "グラフ: 極大平面グラフ";
+				graphStatusDisplay.style.color = "blue";
+				graphStatusDisplay.style.fontWeight = "bold";
+				maxGraphEdgeDisplay.textContent = ` - `;
+			}
+		}
+
+		// K3,3があるか
+		if (k33) {
+			hasK33Display.textContent = `k3,3: ${k33.map((sub) => `(${sub.join(",")})`).join(", ")}`;
+			hasK33Display.style.color = "red";
+			hasK33Display.style.fontWeight = "bold";
+		} else {
+			hasK33Display.textContent = "k3,3: -";
+			hasK33Display.style.color = "";
+			hasK33Display.style.fontWeight = "";
+		}
+
+		// K5があるか
+		if (k5) {
+			hasK5Display.textContent = `k5: (${k5.join(", ")})`;
+			hasK5Display.style.color = "red";
+			hasK5Display.style.fontWeight = "bold";
+		} else {
+			hasK5Display.textContent = "k5: -";
+			hasK5Display.style.color = "";
+			hasK5Display.style.fontWeight = "";
 		}
 	}
 

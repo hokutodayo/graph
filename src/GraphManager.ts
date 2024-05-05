@@ -9,8 +9,9 @@ import { MouseButton, Utils } from "./utils";
 // インターフェース
 // ============================================================================
 export interface GraphInfo {
-	vertexCount: number;
-	edgeCount: number;
+	vertices: Vertex[];
+	edges: Edge[];
+	degrees: DegreeSequence;
 }
 
 // ============================================================================
@@ -46,13 +47,13 @@ export class GraphManager {
 	private isDragging = false;
 	private lastPos = { x: 0, y: 0 };
 	// コールバック関数
-	private updateDegreeSequence: (vertices: Vertex[]) => void;
+	private updateDegreeSequence: (vertices: Vertex[], edges: Edge[]) => void;
 	private updateInfo: (info: GraphInfo) => void;
 	// 頂点情報表示
-	private showIndex: boolean = false;
+	private showIndex: boolean = true;
 	private showDegree: boolean = false;
 
-	constructor(canvas: HTMLCanvasElement, updateDegreeSequence: (vertices: Vertex[]) => void, updateInfo: (info: GraphInfo) => void) {
+	constructor(canvas: HTMLCanvasElement, updateDegreeSequence: (vertices: Vertex[], edges: Edge[]) => void, updateInfo: (info: GraphInfo) => void) {
 		this.canvas = canvas;
 		this.ctx = this.canvas.getContext("2d")!;
 		this.degrees = new DegreeSequence();
@@ -265,22 +266,8 @@ export class GraphManager {
 		const vertex = new Vertex(x, y);
 		this.vertices.push(vertex);
 		// 次数配列の更新
-		this.updateDegreeSequence(this.vertices);
+		this.updateDegreeSequence(this.vertices, this.edges);
 		return vertex;
-	}
-
-	// 頂点を削除する
-	private deleteVertex(vertex: Vertex): void {
-		// 頂点を削除
-		this.vertices.splice(this.vertices.indexOf(vertex), 1);
-		// 頂点に接続された辺を取得
-		const deleteEdges: Edge[] = this.edges.filter((edge) => edge.from === vertex || edge.to === vertex);
-		// 辺を削除
-		deleteEdges.forEach((edge) => {
-			this.deleteEdge(edge);
-		});
-		// 次数配列の更新
-		this.updateDegreeSequence(this.vertices);
 	}
 
 	// 辺を追加する
@@ -297,10 +284,25 @@ export class GraphManager {
 			const edge = new Edge(from, to);
 			this.edges.push(edge);
 			// 次数配列の更新
-			this.updateDegreeSequence(this.vertices);
+			this.updateDegreeSequence(this.vertices, this.edges);
 			return edge;
 		}
 		return null;
+	}
+
+	// 頂点を削除する
+	private deleteVertex(vertex: Vertex): void {
+		// 頂点を削除
+		this.vertices.splice(this.vertices.indexOf(vertex), 1);
+		// 頂点に接続された辺を削除
+		vertex.edges.forEach((edge) => {
+			edge.from.deleteEdge(edge);
+			edge.to.deleteEdge(edge);
+			// 辺オブジェクト配列から、辺を削除
+			this.edges = this.edges.filter((item) => item !== edge);
+		});
+		// 次数配列の更新
+		this.updateDegreeSequence(this.vertices, this.edges);
 	}
 
 	// 辺を削除する
@@ -309,9 +311,9 @@ export class GraphManager {
 		edge.from.deleteEdge(edge);
 		edge.to.deleteEdge(edge);
 		// 辺オブジェクト配列から、辺を削除
-		this.edges = this.edges.filter((tempEdge) => tempEdge !== edge);
+		this.edges = this.edges.filter((item) => item !== edge);
 		// 次数配列の更新
-		this.updateDegreeSequence(this.vertices);
+		this.updateDegreeSequence(this.vertices, this.edges);
 	}
 
 	// キャンバスの移動制限
@@ -351,7 +353,7 @@ export class GraphManager {
 		this.isDragging = false;
 		this.lastPos = { x: 0, y: 0 };
 		// 次数配列の更新
-		this.updateDegreeSequence(this.vertices);
+		this.updateDegreeSequence(this.vertices, this.edges);
 		this.resizeCanvas();
 	}
 
@@ -368,7 +370,7 @@ export class GraphManager {
 			edge.straightenEdge();
 		}
 		// 次数配列の更新
-		this.updateDegreeSequence(this.vertices);
+		this.updateDegreeSequence(this.vertices, this.edges);
 		this.drawGraph();
 	}
 
@@ -436,8 +438,9 @@ export class GraphManager {
 
 		// 画面上の情報更新
 		this.updateInfo!({
-			vertexCount: this.vertices.length,
-			edgeCount: this.edges.length,
+			vertices: this.vertices,
+			edges: this.edges,
+			degrees: this.degrees,
 		});
 
 		// 情報表示（倍率と座標）
@@ -562,7 +565,7 @@ export class GraphManager {
 			return edge;
 		});
 		// 次数配列の更新
-		this.updateDegreeSequence(this.vertices);
+		this.updateDegreeSequence(this.vertices, this.edges);
 		this.drawGraph();
 	}
 }

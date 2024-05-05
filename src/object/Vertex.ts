@@ -26,7 +26,7 @@ export class Vertex extends Point {
 
 	// 辺を削除
 	deleteEdge(edge: Edge): void {
-		this.edges = this.edges.filter((tempEdge) => tempEdge !== edge);
+		this.edges = this.edges.filter((item) => item !== edge);
 	}
 
 	// 次数取得
@@ -48,7 +48,7 @@ export class Vertex extends Point {
 		ctx.fillStyle = "black";
 		ctx.font = "12px Sans-serif";
 		if (showIndex) {
-			ctx.fillText(`Index: ${index + 1}`, this.x + this.radius + 5, this.y - this.radius - 5);
+			ctx.fillText(`Index: ${index}`, this.x + this.radius + 5, this.y - this.radius - 5);
 		}
 		if (showDegree) {
 			ctx.fillText(`Degree: ${this.getDegree()}`, this.x + this.radius + 5, this.y - this.radius + 15);
