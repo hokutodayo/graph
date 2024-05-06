@@ -21,6 +21,12 @@ export class Vertex extends Point {
 
 	// 辺を追加
 	addEdge(edge: Edge): void {
+		// 重複辺を取得
+		const duplicateEdge = this.edges.find((item) => (item.from === edge.from && item.to === edge.to) || (item.from === edge.to && item.to === edge.from));
+		// 重複辺は削除
+		if (duplicateEdge) {
+			this.deleteEdge(duplicateEdge);
+		}
 		this.edges.push(edge);
 	}
 

@@ -31,11 +31,11 @@ function setup(): void {
 		if (isDegreeArray) {
 			toggleButton.textContent = "次数配列";
 			degreesInput.placeholder = "例: 4,4,4,3,3";
-			degreesInput.value = graphManager.degrees.getArrayString();
+			degreesInput.value = graphManager.degreeSequence.getArrayString();
 		} else {
 			toggleButton!.textContent = "ランレングス圧縮";
 			degreesInput.placeholder = "例: 4*3,3*2";
-			degreesInput.value = graphManager.degrees.getRunLengthString();
+			degreesInput.value = graphManager.degreeSequence.getRunLengthString();
 		}
 	}
 
@@ -43,26 +43,27 @@ function setup(): void {
 	function inputDegreeSequence(e: Event): void {
 		if (isDegreeArray) {
 			// 数字、カンマを許容
-			const cleanedValue = degreesInput.value.replace(/[^0-9,]/g, "");
+			const cleanedValue = degreesInput.value.replace(/[^0-9, ]/g, "");
 			degreesInput.value = cleanedValue;
 		} else {
 			// 数字、カンマ、アスタリスクを許容
-			const cleanedValue = degreesInput.value.replace(/[^0-9,*]/g, "");
+			const cleanedValue = degreesInput.value.replace(/[^0-9,* ]/g, "");
 			degreesInput.value = cleanedValue;
 		}
 	}
 
 	// 次数配列入力欄のロストフォーカス時の処理
 	function blurDegreeSequence(e: Event): void {
-		graphManager.degrees.setValue(degreesInput.value);
+		graphManager.degreeSequence.setValue(degreesInput.value);
 		// 値の設定
 		if (isDegreeArray) {
-			degreesInput.value = graphManager.degrees.getArrayString();
+			degreesInput.value = graphManager.degreeSequence.getArrayString();
 		} else {
-			degreesInput.value = graphManager.degrees.getRunLengthString();
+			degreesInput.value = graphManager.degreeSequence.getRunLengthString();
 		}
-		// 平面グラフ判定
-		if (graphManager.degrees.isPlanarGraph()) {
+
+		// 有効性判定
+		if (graphManager.degreeSequence.isValid()) {
 			degreesInput.classList.remove("is-invalid");
 			degreesInput.classList.add("is-valid");
 			applyButton.disabled = false;
@@ -75,20 +76,24 @@ function setup(): void {
 
 	// 適用ボタンが押された時の処理
 	function applyDegreeSequence(e: Event): void {
-		const input = document.querySelector(".form-control") as HTMLInputElement;
-		const inputValue = input.value;
-		console.log("入力された数式:", inputValue);
-
-		// TODO: グラフの生成
+		if (graphManager.degreeSequence.vertexCount() > 100) {
+			Utils.confirmAction("頂点の数が100を超えるグラフは描画できません", () => {});
+		} else if (graphManager.degreeSequence.vertexCount() > 50) {
+			Utils.confirmAction("頂点の数が大きいため、描画に数分かかる場合がありますがよろしいですか？", () => {
+				graphManager.createGraphFromMatrix();
+			});
+		} else {
+			graphManager.createGraphFromMatrix();
+		}
 	}
 
 	// 次数配列の更新
 	function updateDegreeSequence(vertices: Vertex[], edges: Edge[]): void {
-		graphManager.degrees.setVertices(vertices, edges);
+		graphManager.degreeSequence.setVertices(vertices, edges);
 		if (isDegreeArray) {
-			degreesInput.value = graphManager.degrees.getArrayString();
+			degreesInput.value = graphManager.degreeSequence.getArrayString();
 		} else {
-			degreesInput.value = graphManager.degrees.getRunLengthString();
+			degreesInput.value = graphManager.degreeSequence.getRunLengthString();
 		}
 	}
 
@@ -124,26 +129,60 @@ function setup(): void {
 
 	// オブジェクト情報の更新
 	function updateInfo(info: GraphInfo): void {
+		// 頂点と辺の数
 		vertexDisplay.textContent = `頂点の数: ${info.vertices.length}`;
 		edgeDisplay.textContent = `辺の数: ${info.edges.length}`;
 
+		// 初期化
+		graphStatusDisplay.textContent = "グラフ: 平面グラフ";
+		graphStatusDisplay.style.color = "";
+		graphStatusDisplay.style.fontWeight = "";
+		maxGraphEdgeDisplay.textContent = " - ";
+		hasK33Display.textContent = "k3,3: -";
+		hasK33Display.style.color = "";
+		hasK33Display.style.fontWeight = "";
+		hasK5Display.textContent = "k5: -";
+		hasK5Display.style.color = "";
+		hasK5Display.style.fontWeight = "";
+
+		// 最小限のグラフ判定
 		if (info.vertices.length < 3) {
-			maxGraphEdgeDisplay.textContent = " - ";
 			return;
 		}
 
 		// 極大平面グラフ判定（ 3V - E = 6 ）
 		const result = 3 * info.vertices.length - info.edges.length;
-		// 非平面チェック結果
-		const k33 = info.degrees.resultK33;
-		const k5 = info.degrees.resultK5;
+		// 隣接行列を取得
+		const adjacencyMatrix = info.degreeSequence.getAdjacencyMatrix();
 
 		// グラフ状態
-		if (k33 || k5) {
+		if (adjacencyMatrix === null) {
+			// 描画不可能
+			graphStatusDisplay.textContent = "グラフ: 実現不可";
+			graphStatusDisplay.style.color = "red";
+			graphStatusDisplay.style.fontWeight = "bold";
+		} else if (adjacencyMatrix.hasK33() || adjacencyMatrix.hasK5()) {
+			// 非平面グラフ
 			graphStatusDisplay.textContent = "グラフ: 非平面グラフ";
 			graphStatusDisplay.style.color = "red";
 			graphStatusDisplay.style.fontWeight = "bold";
+
+			// K3,3
+			if (adjacencyMatrix && adjacencyMatrix.hasK33()) {
+				const k33 = adjacencyMatrix.getResultK33();
+				hasK33Display.textContent = `k3,3: ${k33!.map((sub) => `(${sub.join(",")})`).join(", ")}`;
+				hasK33Display.style.color = "red";
+				hasK33Display.style.fontWeight = "bold";
+			}
+			// K5
+			if (adjacencyMatrix && adjacencyMatrix.hasK5()) {
+				const k5 = adjacencyMatrix.getResultK5();
+				hasK5Display.textContent = `k5: (${k5!.join(", ")})`;
+				hasK5Display.style.color = "red";
+				hasK5Display.style.fontWeight = "bold";
+			}
 		} else {
+			// 平面グラフ
 			if (result > 6) {
 				graphStatusDisplay.textContent = "グラフ: 平面グラフ";
 				graphStatusDisplay.style.color = "";
@@ -155,28 +194,6 @@ function setup(): void {
 				graphStatusDisplay.style.fontWeight = "bold";
 				maxGraphEdgeDisplay.textContent = ` - `;
 			}
-		}
-
-		// K3,3があるか
-		if (k33) {
-			hasK33Display.textContent = `k3,3: ${k33.map((sub) => `(${sub.join(",")})`).join(", ")}`;
-			hasK33Display.style.color = "red";
-			hasK33Display.style.fontWeight = "bold";
-		} else {
-			hasK33Display.textContent = "k3,3: -";
-			hasK33Display.style.color = "";
-			hasK33Display.style.fontWeight = "";
-		}
-
-		// K5があるか
-		if (k5) {
-			hasK5Display.textContent = `k5: (${k5.join(", ")})`;
-			hasK5Display.style.color = "red";
-			hasK5Display.style.fontWeight = "bold";
-		} else {
-			hasK5Display.textContent = "k5: -";
-			hasK5Display.style.color = "";
-			hasK5Display.style.fontWeight = "";
 		}
 	}
 

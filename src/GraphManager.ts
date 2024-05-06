@@ -1,3 +1,4 @@
+import * as d3 from "d3-force";
 import { DegreeSequence } from "./DegreeSequence ";
 import { Control } from "./object/Control";
 import { Edge } from "./object/Edge";
@@ -11,7 +12,13 @@ import { MouseButton, Utils } from "./utils";
 export interface GraphInfo {
 	vertices: Vertex[];
 	edges: Edge[];
-	degrees: DegreeSequence;
+	degreeSequence: DegreeSequence;
+}
+
+interface SimulatedNode {
+	index: number;
+	x: number;
+	y: number;
 }
 
 // ============================================================================
@@ -32,7 +39,7 @@ export class GraphManager {
 	// オブジェクト管理
 	public vertices: Vertex[] = [];
 	public edges: Edge[] = [];
-	public degrees: DegreeSequence;
+	public degreeSequence: DegreeSequence;
 	// オブジェクト操作
 	private selectedVertex: Vertex | null = null;
 	private selectedEdge: Edge | null = null;
@@ -56,7 +63,7 @@ export class GraphManager {
 	constructor(canvas: HTMLCanvasElement, updateDegreeSequence: (vertices: Vertex[], edges: Edge[]) => void, updateInfo: (info: GraphInfo) => void) {
 		this.canvas = canvas;
 		this.ctx = this.canvas.getContext("2d")!;
-		this.degrees = new DegreeSequence();
+		this.degreeSequence = new DegreeSequence();
 		this.updateDegreeSequence = updateDegreeSequence;
 		this.updateInfo = updateInfo;
 		this.setupEvents();
@@ -440,7 +447,7 @@ export class GraphManager {
 		this.updateInfo!({
 			vertices: this.vertices,
 			edges: this.edges,
-			degrees: this.degrees,
+			degreeSequence: this.degreeSequence,
 		});
 
 		// 情報表示（倍率と座標）
@@ -567,5 +574,63 @@ export class GraphManager {
 		// 次数配列の更新
 		this.updateDegreeSequence(this.vertices, this.edges);
 		this.drawGraph();
+	}
+
+	// ============================================================================
+	// グラフ生成
+	// ============================================================================
+	public createGraphFromMatrix(): void {
+		const adjacencyMatrix = this.degreeSequence.generateAdjacencyMatrix();
+		if (!adjacencyMatrix) {
+			return;
+		}
+		const matrix = adjacencyMatrix.getMatrix();
+		if (!matrix) {
+			return;
+		}
+
+		// キャンバスの中心座標を取得
+		const centerX = this.MAX_CANVAS_WIDTH / 2;
+		const centerY = this.MAX_CANVAS_HEIGHT / 2;
+
+		// 力指向レイアウトを適用して頂点を配置
+		this.vertices = this.applyForceDirectedLayout(matrix, centerX, centerY);
+		this.edges = [];
+
+		// 辺の作成
+		for (let i = 0; i < matrix.length; i++) {
+			for (let j = i + 1; j < matrix[i].length; j++) {
+				if (matrix[i][j] === 1) {
+					const newEdge = new Edge(this.vertices[i], this.vertices[j]);
+					this.edges.push(newEdge);
+					this.vertices[i].addEdge(newEdge);
+					this.vertices[j].addEdge(newEdge);
+				}
+			}
+		}
+	}
+
+	// 力指向レイアウト適用
+	private applyForceDirectedLayout(matrix: number[][], centerX: number, centerY: number): Vertex[] {
+		const nodes = matrix.map((_, i) => ({ index: i })) as SimulatedNode[];
+		const links = [];
+		for (let i = 0; i < matrix.length; i++) {
+			for (let j = i + 1; j < matrix[i].length; j++) {
+				if (matrix[i][j] === 1) {
+					links.push({ source: i, target: j });
+				}
+			}
+		}
+		// 力指向アルゴリズムの設定
+		let simulation = d3.forceSimulation(nodes);
+		simulation.force("link", d3.forceLink(links).distance(50));
+		simulation.force("charge", d3.forceManyBody().strength(-100));
+		simulation.force("center", d3.forceCenter(centerX, centerY));
+		simulation.stop();
+
+		// シミュレーションの実行
+		for (let i = 0; i < 100; i++) simulation.tick();
+		// 頂点オブジェクトの生成
+		return nodes.map((node) => new Vertex(node.x, node.y));
 	}
 }
