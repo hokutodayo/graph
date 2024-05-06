@@ -13,6 +13,8 @@ export interface GraphInfo {
 	vertices: Vertex[];
 	edges: Edge[];
 	degreeSequence: DegreeSequence;
+	origin: { x: number; y: number };
+	scale: number;
 }
 
 interface SimulatedNode {
@@ -444,10 +446,12 @@ export class GraphManager {
 		this.ctx.restore();
 
 		// 画面上の情報更新
-		this.updateInfo!({
+		this.updateInfo({
 			vertices: this.vertices,
 			edges: this.edges,
 			degreeSequence: this.degreeSequence,
+			origin: this.origin,
+			scale: this.scale,
 		});
 
 		// 情報表示（倍率と座標）
@@ -557,6 +561,8 @@ export class GraphManager {
 					y: edge.control.y,
 				},
 			})),
+			origin: { x: this.origin.x, y: this.origin.y },
+			scale: this.scale,
 		};
 		return JSON.stringify(exportData);
 	}
@@ -573,6 +579,9 @@ export class GraphManager {
 			edge.control.y = eData.control.y;
 			return edge;
 		});
+		this.origin = importData.origin;
+		this.scale = importData.scale;
+		this.currentZoomIndex = this.zoomLevels.indexOf(importData.scale);
 		// 次数配列の更新
 		this.updateDegreeSequence(this.vertices, this.edges);
 		this.drawGraph();
@@ -610,6 +619,7 @@ export class GraphManager {
 				}
 			}
 		}
+		this.resizeCanvas();
 	}
 
 	// 力指向レイアウト適用
