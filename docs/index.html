@@ -86,17 +86,23 @@
 							<p id="hasK5Display">K5: -</p>
 						</div>
 
-						<div>
-							<!-- インデックス表示のチェックボックス -->
-							<label><input type="checkbox" id="showIndexCheckbox" checked="true" />頂点番号を表示する</label>
-							<!-- 次数表示のチェックボックス -->
-							<label><input type="checkbox" id="showDegreeCheckbox" />次数を表示する</label>
+						<div class="my-3">
+							<div>
+								<!-- インデックス表示のチェックボックス -->
+								<label><input type="checkbox" id="showIndexCheckbox" checked="true" />頂点番号を表示する</label>
+							</div>
+							<div>
+								<!-- 次数表示のチェックボックス -->
+								<label><input type="checkbox" id="showDegreeCheckbox" />次数を表示する</label>
+							</div>
 						</div>
 
-						<!-- モード変更するボタン -->
-						<div>
-							<button id="changeForceDirectModeButton" class="btn btn-primary my-2">ペジェ曲線モードにする</button>
+						<!-- グラフレイアウトモード変更するトグルボタン -->
+						<div class="btn-group" role="group" aria-label="Toggle Button Group">
+							<button id="graphLayoutToggle1" type="button" style="width: 120px" class="btn btn-outline-primary btn-toggle px-0 active">力指向</button>
+							<button id="graphLayoutToggle2" type="button" style="width: 120px" class="btn btn-outline-primary btn-toggle px-0">ペジェ曲線</button>
 						</div>
+
 						<!-- 辺を直線化するボタン -->
 						<div>
 							<button id="straightenEdgesButton" class="btn btn-primary my-2" disabled>辺を直線にする</button>

@@ -9,6 +9,7 @@ import { MouseButtonEnum, Utils } from "./utils";
 // ============================================================================
 // インターフェース
 // ============================================================================
+// グラフ情報インターフェース
 export interface GraphInfo {
 	vertices: Vertex[];
 	edges: Edge[];
@@ -17,10 +18,20 @@ export interface GraphInfo {
 	scale: number;
 }
 
+// D3のnodeインターフェース
 interface SimulatedNode {
 	index: number;
 	x: number;
 	y: number;
+}
+
+// ============================================================================
+// 列挙体
+// ============================================================================
+// グラフレイアウトモードの列挙体
+export enum GraphLayoutEnum {
+	ForceDirect = "力指向",
+	BezierCurve = "ペジェ曲線",
 }
 
 // ============================================================================
@@ -34,8 +45,8 @@ export class GraphManager {
 	private ctx: CanvasRenderingContext2D;
 	// グリッド表示状態
 	private showGrid: boolean = true;
-	// 力指向モード
-	private forceDirectMode: boolean = true;
+	// グラフレイアウトモード
+	private layoutEMode: GraphLayoutEnum = GraphLayoutEnum.ForceDirect;
 	// マウス位置
 	private mouse: { x: number; y: number } = { x: 0, y: 0 };
 	// オブジェクト管理
@@ -85,7 +96,7 @@ export class GraphManager {
 		this.canvas.addEventListener("contextmenu", this.handleContextMenu.bind(this));
 		this.canvas.addEventListener("wheel", this.handleWheel.bind(this));
 		window.addEventListener("resize", this.resizeCanvas.bind(this));
-		this.changeForceDirectMode(this.forceDirectMode);
+		this.changeGraphLayoutMode(this.layoutEMode);
 	}
 
 	// ダブルクリック
@@ -430,7 +441,7 @@ export class GraphManager {
 		this.drawGrid();
 
 		// 力指向モードによって辺の描画を切り替える
-		if (this.forceDirectMode) {
+		if (this.layoutEMode) {
 			// 辺の描画
 			this.edges.forEach((edge) => edge.draw(this.ctx));
 		} else {
@@ -472,16 +483,19 @@ export class GraphManager {
 	// ============================================================================
 	private intervalId: NodeJS.Timeout | null = null;
 
-	// 力指向モードのON/OFF
-	changeForceDirectMode(forceDirectMode: boolean): void {
-		this.forceDirectMode = forceDirectMode;
-		if (this.forceDirectMode) {
-			this.intervalId = setInterval(() => {
-				this.updateForceDirectedLayout();
-			}, 100);
-		} else if (this.intervalId) {
+	// グラフレイアウトモード変更
+	changeGraphLayoutMode(layoutEMode: GraphLayoutEnum): void {
+		this.layoutEMode = layoutEMode;
+		// 初期化
+		if (this.intervalId) {
 			clearInterval(this.intervalId);
 			this.intervalId = null;
+		}
+		// 力指向モード、
+		if (this.layoutEMode === GraphLayoutEnum.ForceDirect) {
+			this.intervalId = setInterval(() => {
+				this.updateForceDirectedLayout();
+			}, 50);
 		}
 	}
 

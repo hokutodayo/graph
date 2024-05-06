@@ -1,4 +1,4 @@
-import { GraphInfo, GraphManager } from "./GraphManager";
+import { GraphInfo, GraphLayoutEnum, GraphManager } from "./GraphManager";
 import { Edge } from "./object/Edge";
 import { Vertex } from "./object/Vertex";
 import { Utils } from "./utils";
@@ -25,12 +25,14 @@ function setup(): void {
 	const degreeToggle2 = document.getElementById("degreeToggle2") as HTMLButtonElement;
 	const degreesInput = document.getElementById("degreeSequenceInput") as HTMLInputElement;
 	const applyButton = document.getElementById("applyDegreeSequence") as HTMLButtonElement;
+	const initGraphButton = document.getElementById("initGraphButton") as HTMLButtonElement;
 
 	degreeToggle1.addEventListener("click", clickDegreeArray);
 	degreeToggle2.addEventListener("click", clickRunLength);
 	degreesInput.addEventListener("input", inputDegreeSequence);
 	degreesInput.addEventListener("blur", blurDegreeSequence);
 	applyButton.addEventListener("click", applyDegreeSequence);
+	initGraphButton.addEventListener("click", initGraph);
 
 	// トグルボタンの状態: 初期値は「次数配列」とする
 	let degreeMode = DegreeSeqEnum.Array;
@@ -103,7 +105,14 @@ function setup(): void {
 		}
 	}
 
-	// 次数配列の更新
+	// グラフの初期化
+	function initGraph(e: Event) {
+		Utils.confirmAction("グラフが初期化されますがよろしいですか？", () => {
+			graphManager.initGraph();
+		});
+	}
+
+	// 次数配列の更新（GraphManager内の変更を反映するためのコールバック関数）
 	function updateDegreeSequence(vertices: Vertex[], edges: Edge[]): void {
 		graphManager.degreeSequence.setVertices(vertices, edges);
 		if (degreeMode === DegreeSeqEnum.Array) {
@@ -116,7 +125,6 @@ function setup(): void {
 	// ============================================================================
 	// プロパティエリア
 	// ============================================================================
-	const initGraphButton = document.getElementById("initGraphButton") as HTMLButtonElement;
 	const vertexDisplay = document.getElementById("vertexDisplay") as HTMLElement;
 	const edgeDisplay = document.getElementById("edgeDisplay") as HTMLElement;
 
@@ -127,21 +135,16 @@ function setup(): void {
 
 	const showIndexCheckbox = document.getElementById("showIndexCheckbox") as HTMLInputElement;
 	const showDegreeCheckbox = document.getElementById("showDegreeCheckbox") as HTMLInputElement;
-	const changeForceDirectModeButton = document.getElementById("changeForceDirectModeButton") as HTMLButtonElement;
+
+	const graphLayoutToggle1 = document.getElementById("graphLayoutToggle1") as HTMLButtonElement;
+	const graphLayoutToggle2 = document.getElementById("graphLayoutToggle2") as HTMLButtonElement;
 	const straightenEdgesButton = document.getElementById("straightenEdgesButton") as HTMLButtonElement;
 
-	initGraphButton.addEventListener("click", initGraph);
 	showIndexCheckbox.addEventListener("change", showIndex);
 	showDegreeCheckbox.addEventListener("change", showDegree);
-	changeForceDirectModeButton.addEventListener("click", changeForceDirectMode);
+	graphLayoutToggle1.addEventListener("click", clickForceDirect);
+	graphLayoutToggle2.addEventListener("click", clickBezierCurve);
 	straightenEdgesButton.addEventListener("click", straightenEdges);
-
-	// グラフの初期化
-	function initGraph(e: Event) {
-		Utils.confirmAction("グラフが初期化されますがよろしいですか？", () => {
-			graphManager.initGraph();
-		});
-	}
 
 	// オブジェクト情報の更新
 	function updateInfo(info: GraphInfo): void {
@@ -223,19 +226,27 @@ function setup(): void {
 		graphManager.drawVertexInfo(showIndexCheckbox.checked, showDegreeCheckbox.checked);
 	}
 
-	let forceDirectMode: boolean = true;
+	// グラフレイアウトの初期値は、力指向とする
+	let graphLayoutMode = GraphLayoutEnum.ForceDirect;
 
-	// 力指向モードを切り替える
-	function changeForceDirectMode(e: Event) {
-		forceDirectMode = !forceDirectMode;
-		graphManager.changeForceDirectMode(forceDirectMode);
-		if (forceDirectMode) {
-			changeForceDirectModeButton.textContent = "ペジェ曲線モードにする";
-			straightenEdgesButton.disabled = true;
-		} else {
-			changeForceDirectModeButton.textContent = "力指向モードにする";
-			straightenEdgesButton.disabled = false;
-		}
+	// グラフレイアウトトグルボタンで、力指向が選択された時の処理
+	function clickForceDirect(e: Event) {
+		graphLayoutMode = GraphLayoutEnum.ForceDirect;
+		graphLayoutToggle1.textContent = graphLayoutMode;
+		graphLayoutToggle1.classList.add("active");
+		graphLayoutToggle2.classList.remove("active");
+		straightenEdgesButton.disabled = true;
+		graphManager.changeGraphLayoutMode(graphLayoutMode);
+	}
+
+	// グラフレイアウトトグルボタンで、ペジェ曲線が選択された時の処理
+	function clickBezierCurve(e: Event) {
+		graphLayoutMode = GraphLayoutEnum.BezierCurve;
+		graphLayoutToggle2.textContent = graphLayoutMode;
+		graphLayoutToggle2.classList.add("active");
+		graphLayoutToggle1.classList.remove("active");
+		straightenEdgesButton.disabled = false;
+		graphManager.changeGraphLayoutMode(graphLayoutMode);
 	}
 
 	// すべての辺を直線にする
