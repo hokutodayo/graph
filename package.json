@@ -5,12 +5,14 @@
 	"main": "main.js",
 	"scripts": {
 		"test": "echo \"Error: no test specified\" && exit 1",
-		"start": "webpack serve --open"
+		"start": "webpack serve --open",
+		"build": "webpack"
 	},
 	"keywords": [],
 	"author": "",
 	"license": "ISC",
 	"devDependencies": {
+		"@types/d3-force": "^3.0.9",
 		"nodemon": "^3.1.0",
 		"ts-loader": "^9.5.1",
 		"typescript": "^5.4.5",
@@ -19,6 +21,7 @@
 		"webpack-dev-server": "^5.0.4"
 	},
 	"dependencies": {
+		"d3": "^7.9.0",
 		"sweetalert2": "^11.10.8"
 	}
 }

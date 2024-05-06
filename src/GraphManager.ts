@@ -4,7 +4,7 @@ import { Control } from "./object/Control";
 import { Edge } from "./object/Edge";
 import { Point } from "./object/Point";
 import { Vertex } from "./object/Vertex";
-import { MouseButton, Utils } from "./utils";
+import { MouseButtonEnum, Utils } from "./utils";
 
 // ============================================================================
 // インターフェース
@@ -136,7 +136,7 @@ export class GraphManager {
 	// マウスダウン
 	private handleMouseDown(e: MouseEvent): void {
 		// 左クリック以外は処理なし
-		if (e.button !== MouseButton.Left) {
+		if (e.button !== MouseButtonEnum.Left) {
 			return;
 		}
 
@@ -484,9 +484,9 @@ export class GraphManager {
 	// 力指向レイアウトの更新
 	private updateForceDirectedLayout(): void {
 		// 斥力
-		const repulsionConstant = 150;
+		const repulsionConstant = 200;
 		// 引力
-		const attractionConstant = 100;
+		const attractionConstant = 200;
 		const maxDisplacement = 50;
 		const minDistance = 10;
 
@@ -500,10 +500,12 @@ export class GraphManager {
 					const dx = from.x - to.x;
 					const dy = from.y - to.y;
 					let distance = Math.sqrt(dx * dx + dy * dy);
-					distance = Math.max(distance, minDistance);
-					const force = (repulsionConstant * repulsionConstant) / (distance * distance);
-					displacements[i].x += (dx / distance) * force;
-					displacements[i].y += (dy / distance) * force;
+					if (distance < repulsionConstant) {
+						distance = Math.max(distance, minDistance);
+						const force = repulsionConstant / distance;
+						displacements[i].x += (dx / distance) * force;
+						displacements[i].y += (dy / distance) * force;
+					}
 				}
 			});
 		});
@@ -515,7 +517,7 @@ export class GraphManager {
 			const dx = edge.from.x - edge.to.x;
 			const dy = edge.from.y - edge.to.y;
 			const distance = Math.sqrt(dx * dx + dy * dy);
-			const force = (distance * distance) / (attractionConstant * attractionConstant);
+			const force = distance / attractionConstant;
 			displacements[fromIndex].x -= (dx / distance) * force;
 			displacements[fromIndex].y -= (dy / distance) * force;
 			displacements[toIndex].x += (dx / distance) * force;

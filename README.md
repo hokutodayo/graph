@@ -9,25 +9,22 @@
    - Node.js の公式ウェブサイト（https://nodejs.org/ ）からインストーラーをダウンロードし、Node.js と npm をインストールします。
    - Chocolatey のインストールは必要ありません。
 
-2. **Yarn のインストール**
-
-   - Node.js がインストールされた後、コマンドプロンプトで以下のコマンドを実行して Yarn をインストールします：
-     ```
-     npm install --global yarn
-     ```
-
-3. **Webpack のインストール**
+2. **Webpack のインストール**
 
    - Yarn を使用して Webpack をインストールします：
      ```
      yarn add webpack webpack-cli --dev
      ```
 
-4. **SweetAlert2 のインストール**
+3. **ライブラリ のインストール**
 
-   - アラート、ポップアップ、通知のために SweetAlert2 をインストールします：
+   - アラート、ポップアップのために SweetAlert2 をインストールします：
      ```
-     yarn add sweetalert2
+     npm install sweetalert2
+     ```
+   - グラフ描画のために、d3 をインストールします：
+     ```
+     npm install d3
      ```
 
 ### コマンド
@@ -42,7 +39,7 @@
   - コマンドを実行すると、Webpack がプロジェクトのエントリーポイントから依存関係の解析を開始し、設定に従ってファイルをバンドルします。
 
 - **Webpack を使用した手動ビルド**
-  - `yarn webpack --mode development` を使用してプロジェクトを手動でビルドします。これにより `docs` ディレクトリに `bundle.js` が出力されます。
+  - `npm run build` を使用してプロジェクトを手動でビルドします。これにより `docs` ディレクトリに `bundle.js` が出力されます。
 
 ### GitHub Pages へのデプロイ
 

@@ -7,7 +7,7 @@ import { Vertex } from "./object/Vertex";
 // 列挙体
 // ============================================================================
 // マウスボタンの列挙体
-export enum MouseButton {
+export enum MouseButtonEnum {
 	Left = 0,
 	Middle = 1,
 	Right = 2,

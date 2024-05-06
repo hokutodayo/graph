@@ -44,15 +44,25 @@
 			<!-- 数式入力エリア -->
 			<div class="row my-1 compact-row">
 				<div class="col-auto">
-					<div class="d-flex" style="width: 150px">
-						<button id="formatToggle" class="btn btn-outline-secondary w-100">次数配列</button>
+					<!-- 次数配列、ランレングス切り替えトグル -->
+					<div class="btn-group" role="group" aria-label="Toggle Button Group">
+						<button id="degreeToggle1" type="button" style="width: 120px" class="btn btn-outline-primary btn-toggle px-0 active">次数配列</button>
+						<button id="degreeToggle2" type="button" style="width: 120px" class="btn btn-outline-primary btn-toggle px-0">ランレングス圧縮</button>
 					</div>
 				</div>
+
 				<div class="col">
+					<!-- 次数配列入力欄 -->
 					<input id="degreeSequenceInput" type="text" class="form-control" inputmode="decimal" placeholder="例: 4,4,4,3,3" />
 				</div>
+
 				<div class="col-auto">
-					<button id="applyDegreeSequence" class="btn btn-primary">適用</button>
+					<!-- グラフ生成ボタン -->
+					<button id="applyDegreeSequence" style="width: 120px" class="btn btn-primary">グラフ生成</button>
+				</div>
+				<div class="col-auto">
+					<!-- 初期化ボタン -->
+					<button id="initGraphButton" style="width: 120px" class="btn btn-danger">グラフ初期化</button>
 				</div>
 			</div>
 
@@ -66,9 +76,6 @@
 				<!-- プロパティエリア -->
 				<div class="col-2 property-area">
 					<div id="menu" class="bg-light border p-3 full-height">
-						<!-- クリアボタン -->
-						<button id="initGraphButton" class="btn btn-danger my-2">グラフ初期化</button>
-
 						<!-- グラフ情報 -->
 						<div class="statistics">
 							<p id="vertexDisplay">頂点の数: 0</p>

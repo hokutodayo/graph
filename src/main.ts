@@ -4,6 +4,15 @@ import { Vertex } from "./object/Vertex";
 import { Utils } from "./utils";
 
 // ============================================================================
+// 列挙体
+// ============================================================================
+// 次数配列モードの列挙体
+export enum DegreeSeqEnum {
+	Array = "次数配列",
+	RunLength = "ランレングス圧縮",
+}
+
+// ============================================================================
 // HTML項目関連処理
 // ============================================================================
 document.addEventListener("DOMContentLoaded", setup);
@@ -12,36 +21,43 @@ function setup(): void {
 	// ============================================================================
 	// 次数配列
 	// ============================================================================
-	const toggleButton = document.getElementById("formatToggle") as HTMLButtonElement;
+	const degreeToggle1 = document.getElementById("degreeToggle1") as HTMLButtonElement;
+	const degreeToggle2 = document.getElementById("degreeToggle2") as HTMLButtonElement;
 	const degreesInput = document.getElementById("degreeSequenceInput") as HTMLInputElement;
 	const applyButton = document.getElementById("applyDegreeSequence") as HTMLButtonElement;
 
-	toggleButton.addEventListener("click", toggleFormat);
+	degreeToggle1.addEventListener("click", clickDegreeArray);
+	degreeToggle2.addEventListener("click", clickRunLength);
 	degreesInput.addEventListener("input", inputDegreeSequence);
 	degreesInput.addEventListener("blur", blurDegreeSequence);
 	applyButton.addEventListener("click", applyDegreeSequence);
 
 	// トグルボタンの状態: 初期値は「次数配列」とする
-	let isDegreeArray = true;
+	let degreeMode = DegreeSeqEnum.Array;
 
-	// トグルボタンが切り替わった時の処理
-	function toggleFormat(e: Event) {
-		isDegreeArray = !isDegreeArray;
+	// トグルボタンで、次数配列が選択された時の処理
+	function clickDegreeArray(e: Event) {
+		degreeMode = DegreeSeqEnum.Array;
+		degreeToggle1.textContent = degreeMode;
+		degreeToggle1.classList.add("active");
+		degreeToggle2.classList.remove("active");
+		degreesInput.placeholder = "例: 4,4,4,3,3";
+		degreesInput.value = graphManager.degreeSequence.getArrayString();
+	}
 
-		if (isDegreeArray) {
-			toggleButton.textContent = "次数配列";
-			degreesInput.placeholder = "例: 4,4,4,3,3";
-			degreesInput.value = graphManager.degreeSequence.getArrayString();
-		} else {
-			toggleButton!.textContent = "ランレングス圧縮";
-			degreesInput.placeholder = "例: 4*3,3*2";
-			degreesInput.value = graphManager.degreeSequence.getRunLengthString();
-		}
+	// トグルボタンで、ランレングス圧縮が選択された時の処理
+	function clickRunLength(e: Event) {
+		degreeMode = DegreeSeqEnum.RunLength;
+		degreeToggle2!.textContent = degreeMode;
+		degreeToggle2.classList.add("active");
+		degreeToggle1.classList.remove("active");
+		degreesInput.placeholder = "例: 4*3,3*2";
+		degreesInput.value = graphManager.degreeSequence.getRunLengthString();
 	}
 
 	// 次数配列入力欄に入力した時の処理
 	function inputDegreeSequence(e: Event): void {
-		if (isDegreeArray) {
+		if (degreeMode === DegreeSeqEnum.Array) {
 			// 数字、カンマを許容
 			const cleanedValue = degreesInput.value.replace(/[^0-9, ]/g, "");
 			degreesInput.value = cleanedValue;
@@ -56,7 +72,7 @@ function setup(): void {
 	function blurDegreeSequence(e: Event): void {
 		graphManager.degreeSequence.setValue(degreesInput.value);
 		// 値の設定
-		if (isDegreeArray) {
+		if (degreeMode === DegreeSeqEnum.Array) {
 			degreesInput.value = graphManager.degreeSequence.getArrayString();
 		} else {
 			degreesInput.value = graphManager.degreeSequence.getRunLengthString();
@@ -90,7 +106,7 @@ function setup(): void {
 	// 次数配列の更新
 	function updateDegreeSequence(vertices: Vertex[], edges: Edge[]): void {
 		graphManager.degreeSequence.setVertices(vertices, edges);
-		if (isDegreeArray) {
+		if (degreeMode === DegreeSeqEnum.Array) {
 			degreesInput.value = graphManager.degreeSequence.getArrayString();
 		} else {
 			degreesInput.value = graphManager.degreeSequence.getRunLengthString();
