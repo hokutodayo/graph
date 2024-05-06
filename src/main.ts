@@ -1,16 +1,8 @@
+import { DegreeSeqEnum } from "./DegreeSequence ";
 import { GraphInfo, GraphLayoutEnum, GraphManager } from "./GraphManager";
 import { Edge } from "./object/Edge";
 import { Vertex } from "./object/Vertex";
 import { Utils } from "./utils";
-
-// ============================================================================
-// 列挙体
-// ============================================================================
-// 次数配列モードの列挙体
-export enum DegreeSeqEnum {
-	Array = "次数配列",
-	RunLength = "ランレングス圧縮",
-}
 
 // ============================================================================
 // HTML項目関連処理
@@ -59,25 +51,29 @@ function setup(): void {
 
 	// 次数配列入力欄に入力した時の処理
 	function inputDegreeSequence(e: Event): void {
-		if (degreeMode === DegreeSeqEnum.Array) {
-			// 数字、カンマを許容
-			const cleanedValue = degreesInput.value.replace(/[^0-9, ]/g, "");
-			degreesInput.value = cleanedValue;
-		} else {
-			// 数字、カンマ、アスタリスクを許容
-			const cleanedValue = degreesInput.value.replace(/[^0-9,* ]/g, "");
-			degreesInput.value = cleanedValue;
+		switch (degreeMode) {
+			case DegreeSeqEnum.Array:
+				// 数字、カンマを許容
+				degreesInput.value = degreesInput.value.replace(/[^0-9, ]/g, "");
+				break;
+			case DegreeSeqEnum.RunLength:
+				// 数字、カンマ、アスタリスクを許容
+				degreesInput.value = degreesInput.value.replace(/[^0-9,* ]/g, "");
+				break;
 		}
 	}
 
 	// 次数配列入力欄のロストフォーカス時の処理
 	function blurDegreeSequence(e: Event): void {
-		graphManager.degreeSequence.setValue(degreesInput.value);
+		graphManager.degreeSequence.setValue(degreeMode, degreesInput.value);
 		// 値の設定
-		if (degreeMode === DegreeSeqEnum.Array) {
-			degreesInput.value = graphManager.degreeSequence.getArrayString();
-		} else {
-			degreesInput.value = graphManager.degreeSequence.getRunLengthString();
+		switch (degreeMode) {
+			case DegreeSeqEnum.Array:
+				degreesInput.value = graphManager.degreeSequence.getArrayString();
+				break;
+			case DegreeSeqEnum.RunLength:
+				degreesInput.value = graphManager.degreeSequence.getRunLengthString();
+				break;
 		}
 
 		// 有効性判定
@@ -115,10 +111,14 @@ function setup(): void {
 	// 次数配列の更新（GraphManager内の変更を反映するためのコールバック関数）
 	function updateDegreeSequence(vertices: Vertex[], edges: Edge[]): void {
 		graphManager.degreeSequence.setVertices(vertices, edges);
-		if (degreeMode === DegreeSeqEnum.Array) {
-			degreesInput.value = graphManager.degreeSequence.getArrayString();
-		} else {
-			degreesInput.value = graphManager.degreeSequence.getRunLengthString();
+		// 値の設定
+		switch (degreeMode) {
+			case DegreeSeqEnum.Array:
+				degreesInput.value = graphManager.degreeSequence.getArrayString();
+				break;
+			case DegreeSeqEnum.RunLength:
+				degreesInput.value = graphManager.degreeSequence.getRunLengthString();
+				break;
 		}
 	}
 

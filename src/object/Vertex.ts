@@ -5,12 +5,10 @@ import { Point } from "./Point";
 // 頂点クラス
 // ============================================================================
 export class Vertex extends Point {
-	// 半径
-	radius: number;
 	// 選択されているか
-	isSelected: boolean;
+	public isSelected: boolean;
 	// 接続している辺
-	edges: Edge[];
+	public edges: Edge[];
 
 	constructor(x: number, y: number) {
 		super(x, y);
@@ -20,7 +18,7 @@ export class Vertex extends Point {
 	}
 
 	// 辺を追加
-	addEdge(edge: Edge): void {
+	public addEdge(edge: Edge): void {
 		// 重複辺を取得
 		const duplicateEdge = this.edges.find((item) => (item.from === edge.from && item.to === edge.to) || (item.from === edge.to && item.to === edge.from));
 		// 重複辺は削除
@@ -31,17 +29,17 @@ export class Vertex extends Point {
 	}
 
 	// 辺を削除
-	deleteEdge(edge: Edge): void {
+	public deleteEdge(edge: Edge): void {
 		this.edges = this.edges.filter((item) => item !== edge);
 	}
 
 	// 次数取得
-	getDegree(): number {
+	public getDegree(): number {
 		return this.edges.length;
 	}
 
 	// 描画
-	draw(ctx: CanvasRenderingContext2D, showIndex: boolean, index: number, showDegree: boolean): void {
+	public draw(ctx: CanvasRenderingContext2D, showIndex: boolean, index: number, showDegree: boolean): void {
 		ctx.beginPath();
 		ctx.arc(this.x, this.y, this.radius, 0, 2 * Math.PI);
 		ctx.fillStyle = "rgba(255, 100, 150, 1)";

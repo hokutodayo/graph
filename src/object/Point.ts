@@ -5,7 +5,7 @@ import { Position } from "./Position";
 // ============================================================================
 export class Point extends Position {
 	// 半径
-	radius: number;
+	public radius: number;
 
 	constructor(x: number, y: number) {
 		super(x, y);
@@ -13,7 +13,7 @@ export class Point extends Position {
 	}
 
 	// 範囲内か
-	isNear(x: number, y: number): boolean {
+	public isNear(x: number, y: number): boolean {
 		return Math.hypot(this.x - x, this.y - y) < this.radius * 2;
 	}
 }

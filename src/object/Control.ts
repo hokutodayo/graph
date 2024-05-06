@@ -8,15 +8,15 @@ import { Vertex } from "./Vertex";
 // ============================================================================
 export class Control extends Point {
 	// 始点
-	from: Vertex;
+	public from: Vertex;
 	// 終点
-	to: Vertex;
+	public to: Vertex;
 	// 辺
-	edge: Edge;
+	public edge: Edge;
 	// 制御点移動の影響倍率
-	static readonly IMPACT_FACTOR: number = 3;
+	public static readonly IMPACT_FACTOR: number = 3;
 	// 制御点の表示位置調整
-	static readonly ADJUST_VIEW: number = 20;
+	public static readonly ADJUST_VIEW: number = 20;
 
 	constructor(from: Vertex, to: Vertex, edge: Edge) {
 		super(0, 0);
@@ -28,13 +28,13 @@ export class Control extends Point {
 	}
 
 	// 初期化
-	init() {
+	public init() {
 		this.x = (this.from.x + this.to.x) / 2;
 		this.y = (this.from.y + this.to.y) / 2 - Control.ADJUST_VIEW;
 	}
 
 	// 計算用の制御点座標（ペジェ曲線算出用）
-	getCalcPosition(): Position {
+	public getCalcPosition(): Position {
 		const controlX = this.x;
 		const controlY = this.y + Control.ADJUST_VIEW;
 
@@ -48,7 +48,7 @@ export class Control extends Point {
 	}
 
 	// 描画
-	draw(ctx: CanvasRenderingContext2D): void {
+	public draw(ctx: CanvasRenderingContext2D): void {
 		ctx.fillStyle = "red";
 		ctx.beginPath();
 		ctx.arc(this.x, this.y, this.radius, 0, 2 * Math.PI);

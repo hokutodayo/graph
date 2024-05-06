@@ -362,7 +362,7 @@ export class GraphManager {
 	}
 
 	// グラフの初期化
-	initGraph(): void {
+	public initGraph(): void {
 		this.vertices = [];
 		this.edges = [];
 		this.initSelected();
@@ -378,14 +378,14 @@ export class GraphManager {
 	}
 
 	// 頂点情報の表示切り替え
-	drawVertexInfo(showIndex: boolean, showDegree: boolean): void {
+	public drawVertexInfo(showIndex: boolean, showDegree: boolean): void {
 		this.showIndex = showIndex;
 		this.showDegree = showDegree;
 		this.drawGraph();
 	}
 
 	// 辺をすべて直線にする
-	straightenEdges(): void {
+	public straightenEdges(): void {
 		for (let edge of this.edges) {
 			edge.straightenEdge();
 		}
@@ -441,15 +441,18 @@ export class GraphManager {
 		this.drawGrid();
 
 		// 力指向モードによって辺の描画を切り替える
-		if (this.layoutEMode) {
-			// 辺の描画
-			this.edges.forEach((edge) => edge.draw(this.ctx));
-		} else {
-			// 辺の描画
-			this.edges.forEach((edge) => edge.drawBezier(this.ctx));
-			// 制御点の描画
-			this.activeEdge && this.activeEdge.control.draw(this.ctx);
-			this.draggingPoint instanceof Control && this.draggingPoint.draw(this.ctx);
+		switch (this.layoutEMode) {
+			case GraphLayoutEnum.ForceDirect:
+				// 辺の描画
+				this.edges.forEach((edge) => edge.draw(this.ctx));
+				break;
+			case GraphLayoutEnum.BezierCurve:
+				// 辺の描画
+				this.edges.forEach((edge) => edge.drawBezier(this.ctx));
+				// 制御点の描画
+				this.activeEdge && this.activeEdge.control.draw(this.ctx);
+				this.draggingPoint instanceof Control && this.draggingPoint.draw(this.ctx);
+				break;
 		}
 
 		// 頂点の描画
@@ -484,7 +487,7 @@ export class GraphManager {
 	private intervalId: NodeJS.Timeout | null = null;
 
 	// グラフレイアウトモード変更
-	changeGraphLayoutMode(layoutEMode: GraphLayoutEnum): void {
+	public changeGraphLayoutMode(layoutEMode: GraphLayoutEnum): void {
 		this.layoutEMode = layoutEMode;
 		// 初期化
 		if (this.intervalId) {
@@ -518,7 +521,7 @@ export class GraphManager {
 					const dx = from.x - to.x;
 					const dy = from.y - to.y;
 					let distance = Math.sqrt(dx * dx + dy * dy);
-					if (distance < repulsionConstant) {
+					if (distance < repulsionConstant * 1.5) {
 						distance = Math.max(distance, minDistance);
 						const force = repulsionConstant / distance;
 						displacements[i].x += (dx / distance) * force;
@@ -560,7 +563,7 @@ export class GraphManager {
 	// エクスポート／インポート処理
 	// ============================================================================
 	// グラフの状態をJSONとしてエクスポート
-	exportToJson(): string {
+	public exportToJson(): string {
 		const exportData = {
 			vertices: this.vertices.map((vertex, index) => ({
 				id: index,
@@ -582,7 +585,7 @@ export class GraphManager {
 	}
 
 	// JSONからグラフの状態をインポート
-	importFromJson(jsonString: string): void {
+	public importFromJson(jsonString: string): void {
 		const importData = JSON.parse(jsonString);
 		this.vertices = importData.vertices.map((vData: any) => new Vertex(vData.x, vData.y));
 		this.edges = importData.edges.map((eData: any) => {

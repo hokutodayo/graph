@@ -7,13 +7,13 @@ import { Vertex } from "./Vertex";
 // ============================================================================
 export class Edge {
 	// 始点
-	from: Vertex;
+	public from: Vertex;
 	// 終点
-	to: Vertex;
+	public to: Vertex;
 	// 制御点
-	control: Control;
+	public control: Control;
 	// 選択されているか
-	isSelected: boolean;
+	public isSelected: boolean;
 
 	constructor(from: Vertex, to: Vertex) {
 		this.from = from;
@@ -26,12 +26,12 @@ export class Edge {
 	}
 
 	// 辺を直線にする
-	straightenEdge() {
+	public straightenEdge() {
 		this.control.init();
 	}
 
 	// 範囲内か
-	isNear(mouseX: number, mouseY: number, tolerance: number = 10): boolean {
+	public isNear(mouseX: number, mouseY: number, tolerance: number = 10): boolean {
 		const calcPosition = this.control.getCalcPosition();
 		// ベジェ曲線を分割して近似
 		const segment = 10;
@@ -54,22 +54,8 @@ export class Edge {
 		return new Position(x, y);
 	}
 
-	// 点と直線の距離
-	private pointToSegmentDistance(px: number, py: number, x1: number, y1: number, x2: number, y2: number): number {
-		const dx = x2 - x1;
-		const dy = y2 - y1;
-		if (dx === 0 && dy === 0) {
-			return Math.sqrt((px - x1) ** 2 + (py - y1) ** 2);
-		}
-		const t = ((px - x1) * dx + (py - y1) * dy) / (dx * dx + dy * dy);
-		const tClamped = Math.max(0, Math.min(1, t));
-		const nearestX = x1 + tClamped * dx;
-		const nearestY = y1 + tClamped * dy;
-		return Math.sqrt((px - nearestX) ** 2 + (py - nearestY) ** 2);
-	}
-
 	// 描画
-	draw(ctx: CanvasRenderingContext2D): void {
+	public draw(ctx: CanvasRenderingContext2D): void {
 		ctx.beginPath();
 		ctx.moveTo(this.from.x, this.from.y);
 		ctx.lineTo(this.to.x, this.to.y);
@@ -81,7 +67,7 @@ export class Edge {
 	}
 
 	// 描画（ペジェ曲線）
-	drawBezier(ctx: CanvasRenderingContext2D): void {
+	public drawBezier(ctx: CanvasRenderingContext2D): void {
 		ctx.beginPath();
 		ctx.moveTo(this.from.x, this.from.y);
 		// 二次ベジェ曲線
@@ -94,5 +80,19 @@ export class Edge {
 		if (this.isSelected) {
 			this.control.draw(ctx);
 		}
+	}
+
+	// 点と直線の距離
+	private pointToSegmentDistance(px: number, py: number, x1: number, y1: number, x2: number, y2: number): number {
+		const dx = x2 - x1;
+		const dy = y2 - y1;
+		if (dx === 0 && dy === 0) {
+			return Math.sqrt((px - x1) ** 2 + (py - y1) ** 2);
+		}
+		const t = ((px - x1) * dx + (py - y1) * dy) / (dx * dx + dy * dy);
+		const tClamped = Math.max(0, Math.min(1, t));
+		const nearestX = x1 + tClamped * dx;
+		const nearestY = y1 + tClamped * dy;
+		return Math.sqrt((px - nearestX) ** 2 + (py - nearestY) ** 2);
 	}
 }

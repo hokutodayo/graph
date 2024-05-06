@@ -3,6 +3,14 @@ import { Edge } from "./object/Edge";
 import { Vertex } from "./object/Vertex";
 
 // ============================================================================
+// 列挙体
+// ============================================================================
+export enum DegreeSeqEnum {
+	Array = "次数配列",
+	RunLength = "ランレングス圧縮",
+}
+
+// ============================================================================
 // 次数配列クラス
 // ============================================================================
 export class DegreeSequence {
@@ -81,7 +89,7 @@ export class DegreeSequence {
 	}
 
 	// 入力文字から、次数配列にセットする
-	public setValue(value: String): void {
+	public setValue(degreeMode: DegreeSeqEnum, value: String): void {
 		let cleanedValue = value
 			// 連続するカンマやアスタリスクを一つにする
 			.replace(/([,*])\1+/g, "$1")
@@ -89,10 +97,13 @@ export class DegreeSequence {
 			.replace(/[,*]$/, "");
 
 		// 文字列を、次数配列に変換
-		if (cleanedValue.includes("*")) {
-			this.sequence = this.convertRunLengthStringToDegrees(cleanedValue);
-		} else {
-			this.sequence = this.convertArrayStringToDegrees(cleanedValue);
+		switch (degreeMode) {
+			case DegreeSeqEnum.Array:
+				this.sequence = this.convertArrayStringToDegrees(cleanedValue);
+				break;
+			case DegreeSeqEnum.RunLength:
+				this.sequence = this.convertRunLengthStringToDegrees(cleanedValue);
+				break;
 		}
 	}
 
