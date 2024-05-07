@@ -1,4 +1,4 @@
-# 平面グラフ
+# 平面グラフアプリ
 
 ## 開発環境の設定
 
@@ -11,9 +11,10 @@
 
 2. **Webpack のインストール**
 
-   - Yarn を使用して Webpack をインストールします：
+   - モジュールのバンドル化と、効率的な開発環境としてソース変更から自動リロードをするために Webpack をインストールします：
      ```
-     yarn add webpack webpack-cli --dev
+     npm install --save-dev webpack webpack-cli
+     npm install --save-dev webpack-dev-server
      ```
 
 3. **ライブラリ のインストール**
@@ -22,7 +23,7 @@
      ```
      npm install sweetalert2
      ```
-   - グラフ描画のために、d3 をインストールします：
+   - グラフ生成のために、d3 をインストールします：
      ```
      npm install d3
      ```
