@@ -1,5 +1,15 @@
 import { Edge } from "./object/Edge";
 import { Vertex } from "./object/Vertex";
+
+// ============================================================================
+// インターフェース
+// ============================================================================
+// 論理積情報
+interface IntersectionInfo {
+	index: number;
+	intersection: bigint;
+}
+
 // ============================================================================
 // 隣接行列クラス
 // ============================================================================
@@ -137,45 +147,29 @@ export class AdjacencyMatrix {
 		if (n < 6) {
 			return null;
 		}
-		// 隣接行列をビットマスクとして表現する
-		const adjacencyMasks: number[] = [];
+
+		// 隣接行列をbigintのビットマスクとして表現する
+		const adjacencyMasks: bigint[] = [];
 		for (let i = 0; i < n; i++) {
-			let mask = 0;
+			let mask = 0n;
 			for (let j = 0; j < n; j++) {
-				// 接続情報をビット論理和にする
+				// 接続情報に、ビットを立てる
 				if (this.matrix[i][j]) {
-					mask |= 1 << j;
+					mask |= 1n << BigInt(j);
 				}
 			}
 			adjacencyMasks.push(mask);
 		}
-		// 3つの異なる行を選択するすべての組み合わせを試す
-		for (let i = 0; i < n; i++) {
-			for (let j = i + 1; j < n; j++) {
-				for (let k = j + 1; k < n; k++) {
-					// 論理積の結果
-					const intersection = adjacencyMasks[i] & adjacencyMasks[j] & adjacencyMasks[k];
-					if (intersection !== 0 && this.countSetBits(intersection) >= 3) {
-						// 対応するもう片方のインデックス配列を取得する
-						const result: number[][] = [];
-						const selectedRows = [i, j, k];
-						const selectedCols: number[] = [];
-						for (let x = 0; x < n; x++) {
-							if ((intersection & (1 << x)) !== 0) {
-								selectedCols.push(x);
-							}
-							if (selectedCols.length == 3) {
-								break;
-							}
-						}
-						result.push(selectedRows, selectedCols);
-						return result;
-					}
-				}
-			}
+
+		// バックトラッキング法による K3,3 探索
+		const firstGroup = this.backtrack(adjacencyMasks, n, 3);
+		if (firstGroup) {
+			// 第二グループの生成
+			const secondIntersection = adjacencyMasks[firstGroup[0]] & adjacencyMasks[firstGroup[1]] & adjacencyMasks[firstGroup[2]];
+			return [firstGroup, this.getIndicesFromBigInt(secondIntersection)];
+		} else {
+			return null;
 		}
-		// K3,3が見つからなかった
-		return null;
 	}
 
 	// K5を探索して、存在する場合は、K5を構成するindex配列を取得する
@@ -184,50 +178,70 @@ export class AdjacencyMatrix {
 		if (!this.matrix) {
 			return null;
 		}
-		const n = this.matrix.length;
 		// 頂点数５未満は、判定対象外
+		const n = this.matrix.length;
 		if (n < 5) {
 			return null;
 		}
-		// 隣接行列をビットマスクとして表現する
-		const adjacencyMasks: number[] = [];
+		// 隣接行列をbigintのビットマスクとして表現する
+		const adjacencyMasks: bigint[] = [];
 		for (let i = 0; i < n; i++) {
-			let mask = 0;
+			let mask = 0n;
 			for (let j = 0; j < n; j++) {
-				// 接続情報と対角成分をビット論理和にする
+				// 接続情報と、対角成分に、ビットを立てる
 				if (this.matrix[i][j] || i === j) {
-					mask |= 1 << j;
+					mask |= 1n << BigInt(j);
 				}
 			}
 			adjacencyMasks.push(mask);
 		}
-		// 5つの行の組み合わせを生成してチェック
-		for (let i = 0; i < n; i++) {
-			for (let j = i + 1; j < n; j++) {
-				for (let k = j + 1; k < n; k++) {
-					for (let l = k + 1; l < n; l++) {
-						for (let m = l + 1; m < n; m++) {
-							// 論理積の結果
-							const intersection = adjacencyMasks[i] & adjacencyMasks[j] & adjacencyMasks[k] & adjacencyMasks[l] & adjacencyMasks[m];
-							if (intersection !== 0 && this.countSetBits(intersection) >= 5) {
-								return [i, j, k, l, m];
-							}
-						}
-					}
+
+		// バックトラッキングによる K5 探索
+		return this.backtrack(adjacencyMasks, n, 5);
+	}
+
+	// バックトラッキング探索（再帰関数）
+	private backtrack(adjacencyMasks: bigint[], totalNum: number, selectNum: number, start: number = 0, count: number = 0, selected: IntersectionInfo[] = []): number[] | null {
+		// 探索結果が見つかった
+		if (count === selectNum) {
+			return selected.map((info) => info.index);
+		}
+		// 探索する
+		for (let i = start; i < totalNum; i++) {
+			// 残りの探索数が不足する場合は、探索不要
+			if (count + totalNum - i < 5) {
+				break;
+			}
+			// 論理積算出
+			const newIntersection = count === 0 ? adjacencyMasks[i] : selected[count - 1].intersection & adjacencyMasks[i];
+			// 論理積のビット数が５未満は次のindexへ
+			if (this.getIndicesFromBigInt(newIntersection).length >= selectNum) {
+				selected.push({ index: i, intersection: newIntersection });
+				// 探索深度を増やす
+				const result = this.backtrack(adjacencyMasks, totalNum, selectNum, i + 1, count + 1, selected);
+				// 探索状態を戻す
+				selected.pop();
+				//　結果があれば呼び出しもとへ返却
+				if (result) {
+					return result;
 				}
 			}
 		}
-		// K5が見つからなかった
+
 		return null;
 	}
 
-	// ビット数をカウント
-	private countSetBits(mask: number): number {
-		let count = 0;
-		while (mask !== 0) {
-			mask &= mask - 1;
-			count++;
+	// ビットマスクでビットインデックスの配列を取得する
+	private getIndicesFromBigInt(value: bigint): number[] {
+		const indices: number[] = [];
+		let index = 0;
+		while (value > 0n) {
+			if (value & 1n) {
+				indices.push(index);
+			}
+			value >>= 1n;
+			index += 1;
 		}
-		return count;
+		return indices;
 	}
 }

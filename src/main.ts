@@ -90,9 +90,9 @@ function setup(): void {
 
 	// 適用ボタンが押された時の処理
 	function applyDegreeSequence(e: Event): void {
-		if (graphManager.degreeSequence.vertexCount() > 100) {
+		if (graphManager.degreeSequence.vertexCount() > 1000) {
 			Utils.confirmAction("頂点の数が100を超えるグラフは描画できません", () => {});
-		} else if (graphManager.degreeSequence.vertexCount() > 50) {
+		} else if (graphManager.degreeSequence.vertexCount() > 500) {
 			Utils.confirmAction("頂点の数が大きいため、描画に数分かかる場合がありますがよろしいですか？", () => {
 				graphManager.createGraphFromMatrix();
 			});
@@ -300,14 +300,27 @@ function setup(): void {
 		const file = (e.target! as HTMLInputElement).files![0];
 		if (file) {
 			const reader = new FileReader();
+
+			// ファイル読み込み後のイベントハンドラ
 			reader.onload = function (event) {
 				const content = (event.target! as FileReader).result as string;
-				// 読み込んだJSONデータでグラフをインポート
-				graphManager.importFromJson(content);
-				// ファイル入力をリセット
-				importFileInput.value = "";
+				try {
+					// 読み込んだJSONデータでグラフをインポート
+					graphManager.importFromJson(content);
+				} catch (error) {
+					Utils.errorAction("JSONデータのインポート中にエラーが発生しました: " + (error as Error).message);
+				}
 			};
+
+			// ファイル読み込みエラーのハンドラ
+			reader.onerror = function () {
+				Utils.errorAction("ファイルの読み込み中にエラーが発生しました。");
+			};
+
+			// ファイルをテキストとして読み込む
 			reader.readAsText(file);
+			// ファイル入力をリセット
+			importFileInput.value = "";
 		}
 	}
 

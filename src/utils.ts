@@ -35,6 +35,16 @@ export class Utils {
 		});
 	}
 
+	// エラーメッセージを表示する
+	public static errorAction(message: string) {
+		Swal.fire({
+			icon: "error",
+			title: "Oops...",
+			text: message,
+			footer: "",
+		});
+	}
+
 	// 位置に近い点を取得する
 	public static findPointAt(x: number, y: number, vertices: Vertex[], edges: Edge[]): Point | null {
 		// 頂点を検索
