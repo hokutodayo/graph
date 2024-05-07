@@ -30,7 +30,7 @@ function setup(): void {
 	let degreeMode = DegreeSeqEnum.Array;
 
 	// トグルボタンで、次数配列が選択された時の処理
-	function clickDegreeArray(e: Event) {
+	function clickDegreeArray() {
 		degreeMode = DegreeSeqEnum.Array;
 		degreeToggle1.textContent = degreeMode;
 		degreeToggle1.classList.add("active");
@@ -40,7 +40,7 @@ function setup(): void {
 	}
 
 	// トグルボタンで、ランレングス圧縮が選択された時の処理
-	function clickRunLength(e: Event) {
+	function clickRunLength() {
 		degreeMode = DegreeSeqEnum.RunLength;
 		degreeToggle2!.textContent = degreeMode;
 		degreeToggle2.classList.add("active");
@@ -50,7 +50,7 @@ function setup(): void {
 	}
 
 	// 次数配列入力欄に入力した時の処理
-	function inputDegreeSequence(e: Event): void {
+	function inputDegreeSequence(): void {
 		switch (degreeMode) {
 			case DegreeSeqEnum.Array:
 				// 数字、カンマを許容
@@ -64,7 +64,7 @@ function setup(): void {
 	}
 
 	// 次数配列入力欄のロストフォーカス時の処理
-	function blurDegreeSequence(e: Event): void {
+	function blurDegreeSequence(): void {
 		graphManager.degreeSequence.setValue(degreeMode, degreesInput.value);
 		// 値の設定
 		switch (degreeMode) {
@@ -89,7 +89,7 @@ function setup(): void {
 	}
 
 	// 適用ボタンが押された時の処理
-	function applyDegreeSequence(e: Event): void {
+	function applyDegreeSequence(): void {
 		if (graphManager.degreeSequence.vertexCount() > 1000) {
 			Utils.confirmAction("頂点の数が100を超えるグラフは描画できません", () => {});
 		} else if (graphManager.degreeSequence.vertexCount() > 500) {
@@ -102,7 +102,7 @@ function setup(): void {
 	}
 
 	// グラフの初期化
-	function initGraph(e: Event) {
+	function initGraph() {
 		Utils.confirmAction("グラフが初期化されますがよろしいですか？", () => {
 			graphManager.initGraph();
 		});
@@ -217,12 +217,12 @@ function setup(): void {
 	}
 
 	// 頂点番号を表示
-	function showIndex(e: Event) {
+	function showIndex() {
 		graphManager.drawVertexInfo(showIndexCheckbox.checked, showDegreeCheckbox.checked);
 	}
 
 	// 次数を表示
-	function showDegree(e: Event) {
+	function showDegree() {
 		graphManager.drawVertexInfo(showIndexCheckbox.checked, showDegreeCheckbox.checked);
 	}
 
@@ -230,7 +230,7 @@ function setup(): void {
 	let graphLayoutMode = GraphLayoutEnum.ForceDirect;
 
 	// グラフレイアウトトグルボタンで、力指向が選択された時の処理
-	function clickForceDirect(e: Event) {
+	function clickForceDirect() {
 		graphLayoutMode = GraphLayoutEnum.ForceDirect;
 		graphLayoutToggle1.textContent = graphLayoutMode;
 		graphLayoutToggle1.classList.add("active");
@@ -240,7 +240,7 @@ function setup(): void {
 	}
 
 	// グラフレイアウトトグルボタンで、ペジェ曲線が選択された時の処理
-	function clickBezierCurve(e: Event) {
+	function clickBezierCurve() {
 		graphLayoutMode = GraphLayoutEnum.BezierCurve;
 		graphLayoutToggle2.textContent = graphLayoutMode;
 		graphLayoutToggle2.classList.add("active");
@@ -250,7 +250,7 @@ function setup(): void {
 	}
 
 	// すべての辺を直線にする
-	function straightenEdges(e: Event) {
+	function straightenEdges() {
 		Utils.confirmAction("すべての辺が直線になりますがよろしいですか？", () => {
 			graphManager.straightenEdges();
 		});
@@ -329,4 +329,8 @@ function setup(): void {
 	// ============================================================================
 	const canvas = document.getElementById("graphCanvas") as HTMLCanvasElement;
 	const graphManager = new GraphManager(canvas, updateDegreeSequence, updateInfo);
+	// 初期グラフ
+	degreesInput.value = "3, 3, 3, 3";
+	blurDegreeSequence();
+	applyDegreeSequence();
 }
