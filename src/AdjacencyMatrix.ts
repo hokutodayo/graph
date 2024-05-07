@@ -137,24 +137,39 @@ export class AdjacencyMatrix {
 		if (n < 6) {
 			return null;
 		}
-		// 隣接行列をコピーする
-		const matrix = this.matrix.map((row) => row.slice());
+		// 隣接行列をビットマスクとして表現する
+		const adjacencyMasks: number[] = [];
+		for (let i = 0; i < n; i++) {
+			let mask = 0;
+			for (let j = 0; j < n; j++) {
+				// 接続情報をビット論理和にする
+				if (this.matrix[i][j]) {
+					mask |= 1 << j;
+				}
+			}
+			adjacencyMasks.push(mask);
+		}
 		// 3つの異なる行を選択するすべての組み合わせを試す
 		for (let i = 0; i < n; i++) {
 			for (let j = i + 1; j < n; j++) {
 				for (let k = j + 1; k < n; k++) {
 					// 論理積の結果
-					const result = [];
-					let count = 0;
-					for (let x = 0; x < n; x++) {
-						if (matrix[i][x] && matrix[j][x] && matrix[k][x]) {
-							result.push(x);
-							count++;
+					const intersection = adjacencyMasks[i] & adjacencyMasks[j] & adjacencyMasks[k];
+					if (intersection !== 0 && this.countSetBits(intersection) >= 3) {
+						// 対応するもう片方のインデックス配列を取得する
+						const result: number[][] = [];
+						const selectedRows = [i, j, k];
+						const selectedCols: number[] = [];
+						for (let x = 0; x < n; x++) {
+							if ((intersection & (1 << x)) !== 0) {
+								selectedCols.push(x);
+							}
+							if (selectedCols.length == 3) {
+								break;
+							}
 						}
-						// K3,3判定
-						if (count === 3) {
-							return [[i, j, k], result];
-						}
+						result.push(selectedRows, selectedCols);
+						return result;
 					}
 				}
 			}
@@ -174,12 +189,18 @@ export class AdjacencyMatrix {
 		if (n < 5) {
 			return null;
 		}
-		// 隣接行列をコピーし、対角を1にする
-		const matrix = this.matrix.map((row, index) => {
-			const newRow = row.slice();
-			newRow[index] = 1;
-			return newRow;
-		});
+		// 隣接行列をビットマスクとして表現する
+		const adjacencyMasks: number[] = [];
+		for (let i = 0; i < n; i++) {
+			let mask = 0;
+			for (let j = 0; j < n; j++) {
+				// 接続情報と対角成分をビット論理和にする
+				if (this.matrix[i][j] || i === j) {
+					mask |= 1 << j;
+				}
+			}
+			adjacencyMasks.push(mask);
+		}
 		// 5つの行の組み合わせを生成してチェック
 		for (let i = 0; i < n; i++) {
 			for (let j = i + 1; j < n; j++) {
@@ -187,17 +208,9 @@ export class AdjacencyMatrix {
 					for (let l = k + 1; l < n; l++) {
 						for (let m = l + 1; m < n; m++) {
 							// 論理積の結果
-							const result = [];
-							let count = 0;
-							for (let x = 0; x < n; x++) {
-								if (matrix[i][x] && matrix[j][x] && matrix[k][x] && matrix[l][x] && matrix[m][x]) {
-									result.push(x);
-									count++;
-								}
-								// K5判定
-								if (count === 5) {
-									return [i, j, k, l, m];
-								}
+							const intersection = adjacencyMasks[i] & adjacencyMasks[j] & adjacencyMasks[k] & adjacencyMasks[l] & adjacencyMasks[m];
+							if (intersection !== 0 && this.countSetBits(intersection) >= 5) {
+								return [i, j, k, l, m];
 							}
 						}
 					}
@@ -206,5 +219,15 @@ export class AdjacencyMatrix {
 		}
 		// K5が見つからなかった
 		return null;
+	}
+
+	// ビット数をカウント
+	private countSetBits(mask: number): number {
+		let count = 0;
+		while (mask !== 0) {
+			mask &= mask - 1;
+			count++;
+		}
+		return count;
 	}
 }
