@@ -44,19 +44,18 @@
 			<!-- 数式入力エリア -->
 			<div class="row my-1 compact-row">
 				<div class="col-auto">
-					<!-- 次数配列、ランレングス切り替えトグル -->
-					<div class="btn-group" role="group" aria-label="Toggle Button Group">
-						<button id="degreeToggle1" type="button" style="width: 120px" class="btn btn-outline-primary btn-toggle px-0 active">次数配列</button>
-						<button id="degreeToggle2" type="button" style="width: 120px" class="btn btn-outline-primary btn-toggle px-0">ランレングス圧縮</button>
-					</div>
+					<button id="undoButton" type="button" style="width: 100px" class="btn btn-outline-primary btn-toggle px-0" disabled="true">戻す</button>
+					<button id="redoButton" type="button" style="width: 100px" class="btn btn-outline-primary btn-toggle px-0" disabled="true">やり直す</button>
 				</div>
 
-				<div class="col">
+				<div class="col input-group">
+					<!-- 次数配列、ランレングス切り替えトグル -->
+					<span class="btn-group" role="group" aria-label="Toggle Button Group">
+						<button id="degreeToggle1" type="button" style="width: 120px" class="btn btn-outline-primary btn-toggle px-0 active">次数配列</button>
+						<button id="degreeToggle2" type="button" style="width: 120px" class="btn btn-outline-primary btn-toggle px-0 rounded-0">ランレングス圧縮</button>
+					</span>
 					<!-- 次数配列入力欄 -->
 					<input id="degreeSequenceInput" type="text" class="form-control" inputmode="decimal" placeholder="例: 4,4,4,3,3" />
-				</div>
-
-				<div class="col-auto">
 					<!-- グラフ生成ボタン -->
 					<button id="applyDegreeSequence" style="width: 120px" class="btn btn-primary">グラフ生成</button>
 				</div>

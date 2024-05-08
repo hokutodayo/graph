@@ -30,7 +30,7 @@ export class Vertex extends Point {
 
 	// 辺を削除
 	public deleteEdge(edge: Edge): void {
-		this.edges = this.edges.filter((item) => item !== edge);
+		this.edges.splice(this.edges.indexOf(edge), 1);
 	}
 
 	// 次数取得

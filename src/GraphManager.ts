@@ -1,5 +1,6 @@
 import * as d3 from "d3-force";
-import { DegreeSequence } from "./DegreeSequence ";
+import { DegreeSequence } from "./DegreeSequence";
+import { ActionType, HistoryManager } from "./HistoryManager";
 import { Control } from "./object/Control";
 import { Edge } from "./object/Edge";
 import { Point } from "./object/Point";
@@ -52,7 +53,9 @@ export class GraphManager {
 	// オブジェクト管理
 	public vertices: Vertex[] = [];
 	public edges: Edge[] = [];
-	public degreeSequence: DegreeSequence;
+	public degreeSequence: DegreeSequence = new DegreeSequence();
+	// 履歴管理
+	private historyManager = new HistoryManager();
 	// オブジェクト操作
 	private selectedVertex: Vertex | null = null;
 	private selectedEdge: Edge | null = null;
@@ -62,7 +65,7 @@ export class GraphManager {
 	private origin: { x: number; y: number } = { x: 0, y: 0 };
 	private scale: number = 1;
 	private zoomLevels: number[] = [0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1.0, 1.1, 1.2, 1.3, 1.4, 1.5, 1.75, 2.0, 2.5, 3.0, 3.5, 4.0];
-	private currentZoomIndex: number = 10; // 初期値 100%
+	private currentZoomIndex: number = this.zoomLevels.indexOf(1.0);
 	// パン機能
 	private isDragging = false;
 	private lastPos = { x: 0, y: 0 };
@@ -76,7 +79,6 @@ export class GraphManager {
 	constructor(canvas: HTMLCanvasElement, updateDegreeSequence: (vertices: Vertex[], edges: Edge[]) => void, updateInfo: (info: GraphInfo) => void) {
 		this.canvas = canvas;
 		this.ctx = this.canvas.getContext("2d")!;
-		this.degreeSequence = new DegreeSequence();
 		this.updateDegreeSequence = updateDegreeSequence;
 		this.updateInfo = updateInfo;
 		this.setupEvents();
@@ -102,7 +104,7 @@ export class GraphManager {
 	// ダブルクリック
 	private handleDoubleClick(e: MouseEvent): void {
 		this.mouse = this.getMousePosition(e);
-		this.addVertex(this.mouse.x, this.mouse.y);
+		this.addVertexAction(this.mouse.x, this.mouse.y);
 		this.drawGraph();
 	}
 
@@ -167,7 +169,7 @@ export class GraphManager {
 			if (tempSelectedVertex) {
 				// 選択済み頂点と、異なる頂点が取得できた場合
 				if (tempSelectedVertex !== vertex) {
-					this.addEdge(tempSelectedVertex, vertex);
+					this.addEdgeAction(tempSelectedVertex, vertex);
 				}
 			}
 			// 頂点を選択済みにする
@@ -222,10 +224,10 @@ export class GraphManager {
 		// 削除処理
 		if (vertex) {
 			// 頂点を削除
-			this.deleteVertex(vertex);
+			this.deleteVertexAction(vertex);
 		} else if (edge) {
 			// 辺を削除
-			this.deleteEdge(edge);
+			this.deleteEdgeAction(edge);
 		}
 		this.drawGraph();
 	}
@@ -279,61 +281,6 @@ export class GraphManager {
 		this.selectedEdge && (this.selectedEdge.isSelected = false);
 		this.selectedEdge = null;
 		this.canvas.style.cursor = "default";
-	}
-
-	// 頂点を追加する
-	private addVertex(x: number, y: number): Vertex {
-		const vertex = new Vertex(x, y);
-		this.vertices.push(vertex);
-		// 次数配列の更新
-		this.updateDegreeSequence(this.vertices, this.edges);
-		return vertex;
-	}
-
-	// 辺を追加する
-	private addEdge(from: Vertex, to: Vertex): Edge | null {
-		// 異なる２頂点か？
-		if (from && to && from !== to) {
-			// 重複辺を取得
-			const duplicateEdge = this.edges.find((edge) => (edge.from === from && edge.to === to) || (edge.from === to && edge.to === from));
-			// 重複辺は削除
-			if (duplicateEdge) {
-				this.deleteEdge(duplicateEdge);
-			}
-			// 新しい辺を追加
-			const edge = new Edge(from, to);
-			this.edges.push(edge);
-			// 次数配列の更新
-			this.updateDegreeSequence(this.vertices, this.edges);
-			return edge;
-		}
-		return null;
-	}
-
-	// 頂点を削除する
-	private deleteVertex(vertex: Vertex): void {
-		// 頂点を削除
-		this.vertices.splice(this.vertices.indexOf(vertex), 1);
-		// 頂点に接続された辺を削除
-		vertex.edges.forEach((edge) => {
-			edge.from.deleteEdge(edge);
-			edge.to.deleteEdge(edge);
-			// 辺オブジェクト配列から、辺を削除
-			this.edges = this.edges.filter((item) => item !== edge);
-		});
-		// 次数配列の更新
-		this.updateDegreeSequence(this.vertices, this.edges);
-	}
-
-	// 辺を削除する
-	private deleteEdge(edge: Edge): void {
-		// 辺に接続している頂点から、辺を削除
-		edge.from.deleteEdge(edge);
-		edge.to.deleteEdge(edge);
-		// 辺オブジェクト配列から、辺を削除
-		this.edges = this.edges.filter((item) => item !== edge);
-		// 次数配列の更新
-		this.updateDegreeSequence(this.vertices, this.edges);
 	}
 
 	// キャンバスの移動制限
@@ -395,6 +342,183 @@ export class GraphManager {
 	}
 
 	// ============================================================================
+	// 操作処理
+	// ============================================================================
+	// 頂点を追加するアクション
+	private addVertexAction(x: number, y: number): void {
+		const vertex = new Vertex(x, y);
+		this.addVertex(vertex);
+		// 履歴スタック
+		this.historyManager.addAction({ type: ActionType.Add, target: vertex });
+		// 次数配列の更新
+		this.updateDegreeSequence(this.vertices, this.edges);
+	}
+
+	// 辺を追加するアクション
+	private addEdgeAction(from: Vertex, to: Vertex): void {
+		// 異なる２頂点か？
+		if (from && to && from !== to) {
+			// 実行配列
+			const actions = [];
+			// 重複辺を取得
+			const duplicateEdge = this.edges.find((edge) => (edge.from === from && edge.to === to) || (edge.from === to && edge.to === from));
+			// 重複辺は削除
+			if (duplicateEdge) {
+				this.deleteEdge(duplicateEdge);
+				actions.push({ type: ActionType.Delete, target: duplicateEdge });
+			}
+			// 新しい辺を追加
+			const edge = new Edge(from, to);
+			this.addEdge(edge);
+			// 履歴スタック
+			actions.push({ type: ActionType.Add, target: edge });
+			this.historyManager.addGropuedAction({ actions: actions });
+			// 次数配列の更新
+			this.updateDegreeSequence(this.vertices, this.edges);
+		}
+	}
+
+	// 頂点を削除するアクション
+	private deleteVertexAction(vertex: Vertex): void {
+		// 実行配列
+		const actions = [];
+		// 頂点に接続された辺を削除
+		const vertexEdges = [...vertex.edges];
+		// 頂点に接続された辺を削除
+		vertexEdges.forEach((edge) => {
+			this.deleteEdge(edge);
+			actions.push({ type: ActionType.Delete, target: edge });
+		});
+		// 頂点を削除
+		this.deleteVertex(vertex);
+		// 履歴スタック
+		actions.push({ type: ActionType.Delete, target: vertex });
+		this.historyManager.addGropuedAction({ actions: actions });
+		// 次数配列の更新
+		this.updateDegreeSequence(this.vertices, this.edges);
+	}
+
+	// 辺を削除するアクション
+	private deleteEdgeAction(edge: Edge): void {
+		this.deleteEdge(edge);
+		// 履歴スタック
+		this.historyManager.addAction({ type: ActionType.Delete, target: edge });
+		// 次数配列の更新
+		this.updateDegreeSequence(this.vertices, this.edges);
+	}
+
+	// 頂点追加
+	private addVertex(vertex: Vertex): void {
+		this.vertices.push(vertex);
+	}
+
+	// 頂点削除
+	private deleteVertex(vertex: Vertex): void {
+		this.vertices.splice(this.vertices.indexOf(vertex), 1);
+	}
+
+	// 辺追加
+	private addEdge(edge: Edge): void {
+		this.edges.push(edge);
+		edge.from.addEdge(edge);
+		edge.to.addEdge(edge);
+	}
+
+	// 辺削除
+	private deleteEdge(edge: Edge): void {
+		edge.from.deleteEdge(edge);
+		edge.to.deleteEdge(edge);
+		this.edges.splice(this.edges.indexOf(edge), 1);
+	}
+
+	// 戻せるか
+	public canUndo(): boolean {
+		return this.historyManager.canUndo();
+	}
+
+	// 戻す
+	public undo(): void {
+		if (!this.historyManager.canUndo()) {
+			return;
+		}
+		// 履歴情報を取得し、逆操作するためリバースする
+		const actions = [...this.historyManager.undo()!.actions].reverse();
+		// Undoを実行
+		actions.forEach((action) => {
+			if (action.target instanceof Vertex) {
+				// 頂点Actionのundo
+				const vertex = action.target;
+				switch (action.type) {
+					case ActionType.Add:
+						this.deleteVertex(vertex);
+						break;
+					case ActionType.Delete:
+						this.addVertex(vertex);
+						vertex.edges.forEach((edge) => {
+							this.addEdge(edge);
+						});
+						break;
+				}
+			} else if (action.target instanceof Edge) {
+				// 辺ActionのUndo
+				const edge = action.target;
+				switch (action.type) {
+					case ActionType.Add:
+						this.deleteEdge(edge);
+						break;
+					case ActionType.Delete:
+						this.addEdge(edge);
+				}
+			}
+		});
+
+		// 次数配列の更新
+		this.updateDegreeSequence(this.vertices, this.edges);
+	}
+
+	// やり直せるか
+	public canRedo(): boolean {
+		return this.historyManager.canRedo();
+	}
+
+	// やり直す
+	public redo(): void {
+		if (!this.historyManager.canRedo()) {
+			return;
+		}
+		// 履歴情報を取得
+		const groupedAction = this.historyManager.redo()!;
+		// Redoを実行
+		groupedAction.actions.forEach((action) => {
+			if (action.target instanceof Vertex) {
+				// 頂点ActionのRedo
+				const vertex = action.target;
+				switch (action.type) {
+					case ActionType.Add:
+						this.addVertex(vertex);
+						break;
+					case ActionType.Delete:
+						this.deleteVertex(vertex);
+						break;
+				}
+			} else if (action.target instanceof Edge) {
+				// 辺ActionのRedo
+				const edge = action.target;
+				switch (action.type) {
+					case ActionType.Add:
+						this.addEdge(edge);
+						break;
+					case ActionType.Delete:
+						this.deleteEdge(edge);
+				}
+			}
+		});
+
+		// 次数配列の更新
+		this.updateDegreeSequence(this.vertices, this.edges);
+	}
+
+	// ============================================================================
 	// 描画処理
 	// ============================================================================
 	// グリッドの描画
@@ -450,7 +574,7 @@ export class GraphManager {
 				// 辺の描画
 				this.edges.forEach((edge) => edge.drawBezier(this.ctx));
 				// 制御点の描画
-				this.activeEdge && this.activeEdge.control.draw(this.ctx);
+				this.activeEdge && this.edges.includes(this.activeEdge) && this.activeEdge.control.draw(this.ctx);
 				this.draggingPoint instanceof Control && this.draggingPoint.draw(this.ctx);
 				break;
 		}

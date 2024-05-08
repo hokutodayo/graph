@@ -1,4 +1,4 @@
-import { DegreeSeqEnum } from "./DegreeSequence ";
+import { DegreeSeqEnum } from "./DegreeSequence";
 import { GraphInfo, GraphLayoutEnum, GraphManager } from "./GraphManager";
 import { Edge } from "./object/Edge";
 import { Vertex } from "./object/Vertex";
@@ -10,6 +10,28 @@ import { Utils } from "./utils";
 document.addEventListener("DOMContentLoaded", setup);
 
 function setup(): void {
+	// ============================================================================
+	// 戻す、やり直す
+	// ============================================================================
+
+	const undoButton = document.getElementById("undoButton") as HTMLButtonElement;
+	const redoButton = document.getElementById("redoButton") as HTMLButtonElement;
+
+	undoButton.addEventListener("click", clickUndo);
+	redoButton.addEventListener("click", clickRedo);
+
+	// 戻すボタンがクリックされた時の処理
+	function clickUndo() {
+		graphManager.undo();
+		undoButton.disabled = !graphManager.canUndo();
+	}
+
+	// やり直すボタンがクリックされた時の処理
+	function clickRedo() {
+		graphManager.redo();
+		redoButton.disabled = !graphManager.canRedo();
+	}
+
 	// ============================================================================
 	// 次数配列
 	// ============================================================================
@@ -214,6 +236,9 @@ function setup(): void {
 				maxGraphEdgeDisplay.textContent = ` - `;
 			}
 		}
+		// 戻す、やり直すボタンの有効無効化
+		undoButton.disabled = !graphManager.canUndo();
+		redoButton.disabled = !graphManager.canRedo();
 	}
 
 	// 頂点番号を表示
