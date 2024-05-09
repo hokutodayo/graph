@@ -1,5 +1,5 @@
-import { Edge } from "./object/Edge";
-import { Vertex } from "./object/Vertex";
+import { Edge } from "../object/Edge";
+import { Vertex } from "../object/Vertex";
 
 // ============================================================================
 // インターフェース

@@ -1,11 +1,11 @@
 import * as d3 from "d3-force";
+import { MouseButtonEnum, Utils } from "../common/utils";
+import { Control } from "../object/Control";
+import { Edge } from "../object/Edge";
+import { Point } from "../object/Point";
+import { Vertex } from "../object/Vertex";
 import { DegreeSequence } from "./DegreeSequence";
 import { ActionType, HistoryManager } from "./HistoryManager";
-import { Control } from "./object/Control";
-import { Edge } from "./object/Edge";
-import { Point } from "./object/Point";
-import { Vertex } from "./object/Vertex";
-import { MouseButtonEnum, Utils } from "./utils";
 
 // ============================================================================
 // インターフェース
@@ -32,7 +32,13 @@ interface SimulatedNode {
 // グラフレイアウトモードの列挙体
 export enum GraphLayoutEnum {
 	ForceDirect = "力指向",
-	BezierCurve = "ペジェ曲線",
+	Fixed = "固定",
+}
+
+// 辺の描画モードの列挙体
+export enum EdgeDrawingEnum {
+	straightLine = "直線",
+	bezierCurve = "ペジェ曲線",
 }
 
 // ============================================================================
@@ -47,7 +53,8 @@ export class GraphManager {
 	// グリッド表示状態
 	private showGrid: boolean = true;
 	// グラフレイアウトモード
-	private layoutEMode: GraphLayoutEnum = GraphLayoutEnum.ForceDirect;
+	private layoutMode: GraphLayoutEnum = GraphLayoutEnum.ForceDirect;
+	private edgeDrawing: EdgeDrawingEnum = EdgeDrawingEnum.straightLine;
 	// マウス位置
 	private mouse: { x: number; y: number } = { x: 0, y: 0 };
 	// オブジェクト管理
@@ -98,7 +105,7 @@ export class GraphManager {
 		this.canvas.addEventListener("contextmenu", this.handleContextMenu.bind(this));
 		this.canvas.addEventListener("wheel", this.handleWheel.bind(this));
 		window.addEventListener("resize", this.resizeCanvas.bind(this));
-		this.changeGraphLayoutMode(this.layoutEMode);
+		this.setGraphLayout(this.layoutMode);
 	}
 
 	// ダブルクリック
@@ -319,19 +326,14 @@ export class GraphManager {
 		this.activeEdge = null;
 		this.isDragging = false;
 		this.lastPos = { x: 0, y: 0 };
+		// 履歴の初期化
+		this.historyManager.init();
 		// 次数配列の更新
 		this.updateDegreeSequence(this.vertices, this.edges);
 		this.resizeCanvas();
 	}
 
-	// 頂点情報の表示切り替え
-	public drawVertexInfo(showIndex: boolean, showDegree: boolean): void {
-		this.showIndex = showIndex;
-		this.showDegree = showDegree;
-		this.drawGraph();
-	}
-
-	// 辺をすべて直線にする
+	// TODO:辺をすべて直線にする
 	public straightenEdges(): void {
 		for (let edge of this.edges) {
 			edge.straightenEdge();
@@ -474,6 +476,7 @@ export class GraphManager {
 
 		// 次数配列の更新
 		this.updateDegreeSequence(this.vertices, this.edges);
+		this.drawGraph();
 	}
 
 	// やり直せるか
@@ -515,7 +518,75 @@ export class GraphManager {
 		});
 
 		// 次数配列の更新
-		this.updateDegreeSequence(this.vertices, this.edges);
+
+		this.drawGraph();
+	}
+
+	// ============================================================================
+	// 各種表示切り替え操作
+	// ============================================================================
+	// グリッド表示
+	public setShowGrid(showGrid: boolean): void {
+		this.showGrid = showGrid;
+		this.drawGraph();
+	}
+
+	// グリッド表示するか
+	public isShowGrid(): boolean {
+		return this.showGrid;
+	}
+
+	// グラフレイアウトモード
+	public setGraphLayout(graphLayout: GraphLayoutEnum): void {
+		this.layoutMode = graphLayout;
+		this.changeGraphLayout();
+	}
+
+	// グラフレイアウトモードが力指向か
+	public isGraphLayoutForceDirect(): boolean {
+		return this.layoutMode === GraphLayoutEnum.ForceDirect;
+	}
+
+	// グラフレイアウトモードが固定か
+	public isGraphLayoutFixed(): boolean {
+		return this.layoutMode === GraphLayoutEnum.Fixed;
+	}
+
+	// 辺の描画モード
+	public setEdgeDrawing(edgeDrawing: EdgeDrawingEnum): void {
+		this.edgeDrawing = edgeDrawing;
+		this.drawGraph();
+	}
+
+	// 辺の描画モードが直線か
+	public isEdgeDrawingStraightLine(): boolean {
+		return this.edgeDrawing === EdgeDrawingEnum.straightLine;
+	}
+	// 辺の描画モードがペジェ曲線か
+	public isEdgeDrawingBezierCurve(): boolean {
+		return this.edgeDrawing === EdgeDrawingEnum.bezierCurve;
+	}
+
+	// 頂点indexの表示
+	public setShowIndex(showIndex: boolean): void {
+		this.showIndex = showIndex;
+		this.drawGraph();
+	}
+
+	// 頂点indexの表示状態を取得
+	public isShowIndex(): boolean {
+		return this.showIndex;
+	}
+
+	// 頂点次数の表示
+	public setShowDegree(showDegree: boolean): void {
+		this.showDegree = showDegree;
+		this.drawGraph();
+	}
+
+	// 頂点次数の表示状態を取得
+	public isShowDegree(): boolean {
+		return this.showDegree;
 	}
 
 	// ============================================================================
@@ -565,18 +636,14 @@ export class GraphManager {
 		this.drawGrid();
 
 		// 力指向モードによって辺の描画を切り替える
-		switch (this.layoutEMode) {
-			case GraphLayoutEnum.ForceDirect:
-				// 辺の描画
-				this.edges.forEach((edge) => edge.draw(this.ctx));
-				break;
-			case GraphLayoutEnum.BezierCurve:
-				// 辺の描画
-				this.edges.forEach((edge) => edge.drawBezier(this.ctx));
-				// 制御点の描画
-				this.activeEdge && this.edges.includes(this.activeEdge) && this.activeEdge.control.draw(this.ctx);
-				this.draggingPoint instanceof Control && this.draggingPoint.draw(this.ctx);
-				break;
+		if (this.layoutMode === GraphLayoutEnum.Fixed && this.edgeDrawing === EdgeDrawingEnum.bezierCurve) {
+			// ペジェ曲線と、制御点の描画
+			this.edges.forEach((edge) => edge.drawBezier(this.ctx));
+			this.activeEdge && this.edges.includes(this.activeEdge) && this.activeEdge.control.draw(this.ctx);
+			this.draggingPoint instanceof Control && this.draggingPoint.draw(this.ctx);
+		} else {
+			// 直線の描画
+			this.edges.forEach((edge) => edge.draw(this.ctx));
 		}
 
 		// 頂点の描画
@@ -611,15 +678,15 @@ export class GraphManager {
 	private intervalId: NodeJS.Timeout | null = null;
 
 	// グラフレイアウトモード変更
-	public changeGraphLayoutMode(layoutEMode: GraphLayoutEnum): void {
-		this.layoutEMode = layoutEMode;
+	public changeGraphLayout(): void {
 		// 初期化
 		if (this.intervalId) {
 			clearInterval(this.intervalId);
 			this.intervalId = null;
 		}
 		// 力指向モード、
-		if (this.layoutEMode === GraphLayoutEnum.ForceDirect) {
+		if (this.layoutMode === GraphLayoutEnum.ForceDirect) {
+			this.edgeDrawing = EdgeDrawingEnum.straightLine;
 			this.intervalId = setInterval(() => {
 				this.updateForceDirectedLayout();
 			}, 50);
@@ -732,6 +799,7 @@ export class GraphManager {
 	// グラフ生成
 	// ============================================================================
 	public createGraphFromMatrix(): void {
+		this.historyManager.init();
 		const adjacencyMatrix = this.degreeSequence.generateAdjacencyMatrix();
 		if (!adjacencyMatrix) {
 			return;

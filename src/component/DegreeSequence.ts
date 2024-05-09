@@ -1,6 +1,6 @@
+import { Edge } from "../object/Edge";
+import { Vertex } from "../object/Vertex";
 import { AdjacencyMatrix } from "./AdjacencyMatrix";
-import { Edge } from "./object/Edge";
-import { Vertex } from "./object/Vertex";
 
 // ============================================================================
 // 列挙体

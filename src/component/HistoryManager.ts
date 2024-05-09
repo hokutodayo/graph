@@ -1,5 +1,5 @@
-import { Edge } from "./object/Edge";
-import { Vertex } from "./object/Vertex";
+import { Edge } from "../object/Edge";
+import { Vertex } from "../object/Vertex";
 
 // ============================================================================
 // インターフェース
@@ -31,6 +31,16 @@ export class HistoryManager {
 	// 履歴管理配列
 	private history: GroupedAction[] = [];
 	private currentPosition = -1;
+
+	constructor() {
+		this.init();
+	}
+
+	// 初期化
+	public init(): void {
+		this.history = [];
+		this.currentPosition = -1;
+	}
 
 	// Action追加
 	public addAction(action: Action): void {

@@ -23,45 +23,53 @@
 			.overflow-hidden {
 				overflow: hidden; /* 余分なスクロールを隠す */
 			}
+			/* disabledのボタン用スタイル */
+			.btn[disabled] {
+				border: 2px dashed #cccccc; /* ダッシュ線で枠線を表現 */
+				color: #999999; /* 文字を薄いグレーに */
+			}
 		</style>
 	</head>
 	<body>
 		<div class="container-fluid full-height overflow-hidden">
 			<!-- ナビゲーションバー -->
 			<header class="row compact-row">
-				<nav id="nav" class="navbar navbar-expand-lg navbar-light bg-light w-100">
+				<nav class="navbar navbar-expand-lg navbar-light bg-light w-100" id="nav">
 					<div class="container-fluid">
 						<!-- アプリ名 -->
 						<div class="container-fluid">Planar Graph Drawing App</div>
 						<!-- ソースコードのリンク -->
 						<div class="d-flex justify-content-end w-100">
-							<a href="https://github.com/hokutodayo/planar-graph" class="nav-link" target="_blank"> View Source Code </a>
+							<a class="nav-link" href="https://github.com/hokutodayo/planar-graph" target="_blank"> View Source Code </a>
 						</div>
 					</div>
 				</nav>
 			</header>
 
-			<!-- 数式入力エリア -->
+			<!-- 操作エリア -->
 			<div class="row my-1 compact-row">
+				<!-- 戻す、やり直す -->
 				<div class="col-auto">
-					<button id="undoButton" type="button" style="width: 100px" class="btn btn-outline-primary btn-toggle px-0" disabled="true">戻す</button>
-					<button id="redoButton" type="button" style="width: 100px" class="btn btn-outline-primary btn-toggle px-0" disabled="true">やり直す</button>
+					<button class="btn btn-outline-primary btn-toggle px-0" id="undoButton" style="width: 100px" disabled="true">戻す</button>
+					<button class="btn btn-outline-primary btn-toggle px-0" id="redoButton" style="width: 100px" disabled="true">やり直す</button>
 				</div>
 
+				<!-- 次数配列 -->
 				<div class="col input-group">
 					<!-- 次数配列、ランレングス切り替えトグル -->
 					<span class="btn-group" role="group" aria-label="Toggle Button Group">
-						<button id="degreeToggle1" type="button" style="width: 120px" class="btn btn-outline-primary btn-toggle px-0 active">次数配列</button>
-						<button id="degreeToggle2" type="button" style="width: 120px" class="btn btn-outline-primary btn-toggle px-0 rounded-0">ランレングス圧縮</button>
+						<button class="btn btn-outline-primary btn-toggle px-0" id="degreeToggle1" style="width: 120px">次数配列</button>
+						<button class="btn btn-outline-primary btn-toggle px-0 rounded-0" id="degreeToggle2" style="width: 120px">ランレングス圧縮</button>
 					</span>
 					<!-- 次数配列入力欄 -->
-					<input id="degreeSequenceInput" type="text" class="form-control" inputmode="decimal" placeholder="例: 4,4,4,3,3" />
+					<input class="form-control" type="text" id="degreeSequenceInput" inputmode="decimal" placeholder="例: 4,4,4,3,3" />
 					<!-- グラフ生成ボタン -->
-					<button id="applyDegreeSequence" style="width: 120px" class="btn btn-primary">グラフ生成</button>
+					<button class="btn btn-primary" id="applyDegreeSequence" style="width: 120px">グラフ生成</button>
 				</div>
+
+				<!-- 初期化ボタン -->
 				<div class="col-auto">
-					<!-- 初期化ボタン -->
-					<button id="initGraphButton" style="width: 120px" class="btn btn-danger">グラフ初期化</button>
+					<button class="btn btn-danger" id="initGraphButton" style="width: 120px">グラフ初期化</button>
 				</div>
 			</div>
 
@@ -69,12 +77,12 @@
 			<div class="row main-area">
 				<!-- キャンバスエリア -->
 				<div class="col-10 canvas-area">
-					<canvas id="graphCanvas" class="border" width="1000" height="800"></canvas>
+					<canvas class="border" id="graphCanvas" width="1000" height="800"></canvas>
 				</div>
 
 				<!-- プロパティエリア -->
 				<div class="col-2 property-area">
-					<div id="menu" class="bg-light border p-3 full-height">
+					<div class="bg-light border p-3 full-height" id="menu">
 						<!-- グラフ情報 -->
 						<div class="statistics">
 							<p id="vertexDisplay">頂点の数: 0</p>
@@ -85,35 +93,52 @@
 							<p id="hasK5Display">K5: -</p>
 						</div>
 
-						<div class="my-3">
-							<div>
-								<!-- インデックス表示のチェックボックス -->
-								<label><input type="checkbox" id="showIndexCheckbox" checked="true" />頂点番号を表示する</label>
+						<!-- 表示情報切り替え -->
+						<div class="form-group">
+							<div class="form-check">
+								<!-- 頂点番号表示のチェックボックス -->
+								<input class="form-check-input" type="checkbox" id="showIndexCheckbox" />
+								<label class="form-check-label" for="showIndexCheckbox">頂点の 番号 を表示する</label>
 							</div>
-							<div>
-								<!-- 次数表示のチェックボックス -->
-								<label><input type="checkbox" id="showDegreeCheckbox" />次数を表示する</label>
+							<div class="form-check">
+								<!-- 頂点次数表示のチェックボックス -->
+								<input class="form-check-input" type="checkbox" id="showDegreeCheckbox" />
+								<label class="form-check-label" for="showDegreeCheckbox">頂点の 次数 を表示する</label>
 							</div>
 						</div>
 
-						<!-- グラフレイアウトモード変更するトグルボタン -->
-						<div class="btn-group" role="group" aria-label="Toggle Button Group">
-							<button id="graphLayoutToggle1" type="button" style="width: 120px" class="btn btn-outline-primary btn-toggle px-0 active">力指向</button>
-							<button id="graphLayoutToggle2" type="button" style="width: 120px" class="btn btn-outline-primary btn-toggle px-0">ペジェ曲線</button>
-						</div>
+						<hr />
 
-						<!-- 辺を直線化するボタン -->
+						<!-- グラフレイアウト -->
+						<label class="mt-2">オブジェクト配置モード</label>
 						<div>
-							<button id="straightenEdgesButton" class="btn btn-primary my-2" disabled>辺を直線にする</button>
+							<!-- オブジェクト配置モード -->
+							<div class="btn-group" role="group" aria-label="Toggle Button Group">
+								<button class="btn btn-outline-primary btn-toggle px-0" id="graphLayoutToggle1" type="button" style="width: 100px">力指向</button>
+								<button class="btn btn-outline-primary btn-toggle px-0" id="graphLayoutToggle2" type="button" style="width: 100px">固定</button>
+							</div>
 						</div>
 
-						<span>
+						<label class="mt-2">辺の描画モード</label>
+						<div>
+							<!-- 辺の描画モード -->
+							<div class="btn-group" role="group" aria-label="Toggle Button Group">
+								<button class="btn btn-outline-primary btn-toggle px-0" id="drawEdgeToggle1" type="button" style="width: 100px">直線</button>
+								<button class="btn btn-outline-primary btn-toggle px-0" id="drawEdgeToggle2" type="button" style="width: 100px">ペジェ曲線</button>
+							</div>
+						</div>
+
+						<hr />
+
+						<!-- エクスポート、インポート -->
+						<label>データの入出力</label>
+						<div>
 							<!-- エクスポートボタン -->
-							<button id="exportButton" class="btn btn-primary my-2">Export</button>
+							<button class="btn btn-primary" id="exportButton" style="width: 100px">Export</button>
 							<!-- インポートボタン -->
-							<button id="importButton" class="btn btn-primary my-2">Import</button>
-							<input type="file" id="importFileInput" class="btn btn-secondary" accept=".json" style="display: none" />
-						</span>
+							<button class="btn btn-primary" id="importButton" style="width: 100px">Import</button>
+							<input class="btn btn-secondary" type="file" id="importFileInput" accept=".json" style="display: none" />
+						</div>
 					</div>
 				</div>
 			</div>

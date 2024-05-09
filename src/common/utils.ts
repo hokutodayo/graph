@@ -1,8 +1,8 @@
 import Swal from "sweetalert2";
-import { Control } from "./object/Control";
-import { Edge } from "./object/Edge";
-import { Point } from "./object/Point";
-import { Vertex } from "./object/Vertex";
+import { Control } from "../object/Control";
+import { Edge } from "../object/Edge";
+import { Point } from "../object/Point";
+import { Vertex } from "../object/Vertex";
 // ============================================================================
 // 列挙体
 // ============================================================================

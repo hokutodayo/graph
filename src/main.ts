@@ -1,8 +1,8 @@
-import { DegreeSeqEnum } from "./DegreeSequence";
-import { GraphInfo, GraphLayoutEnum, GraphManager } from "./GraphManager";
+import { Utils } from "./common/utils";
+import { DegreeSeqEnum } from "./component/DegreeSequence";
+import { EdgeDrawingEnum, GraphInfo, GraphLayoutEnum, GraphManager } from "./component/GraphManager";
 import { Edge } from "./object/Edge";
 import { Vertex } from "./object/Vertex";
-import { Utils } from "./utils";
 
 // ============================================================================
 // HTML項目関連処理
@@ -11,9 +11,8 @@ document.addEventListener("DOMContentLoaded", setup);
 
 function setup(): void {
 	// ============================================================================
-	// 戻す、やり直す
+	// 操作エリア - 戻す、やり直す
 	// ============================================================================
-
 	const undoButton = document.getElementById("undoButton") as HTMLButtonElement;
 	const redoButton = document.getElementById("redoButton") as HTMLButtonElement;
 
@@ -33,7 +32,7 @@ function setup(): void {
 	}
 
 	// ============================================================================
-	// 次数配列
+	// 操作エリア - 次数配列
 	// ============================================================================
 	const degreeToggle1 = document.getElementById("degreeToggle1") as HTMLButtonElement;
 	const degreeToggle2 = document.getElementById("degreeToggle2") as HTMLButtonElement;
@@ -127,6 +126,8 @@ function setup(): void {
 	function initGraph() {
 		Utils.confirmAction("グラフが初期化されますがよろしいですか？", () => {
 			graphManager.initGraph();
+			// 初期設定値
+			setInitialValue();
 		});
 	}
 
@@ -145,28 +146,19 @@ function setup(): void {
 	}
 
 	// ============================================================================
-	// プロパティエリア
+	// プロパティエリア - グラフ情報
 	// ============================================================================
 	const vertexDisplay = document.getElementById("vertexDisplay") as HTMLElement;
 	const edgeDisplay = document.getElementById("edgeDisplay") as HTMLElement;
-
 	const graphStatusDisplay = document.getElementById("graphStatusDisplay") as HTMLElement;
 	const maxGraphEdgeDisplay = document.getElementById("maxGraphEdgeDisplay") as HTMLElement;
 	const hasK33Display = document.getElementById("hasK33Display") as HTMLElement;
 	const hasK5Display = document.getElementById("hasK5Display") as HTMLElement;
-
 	const showIndexCheckbox = document.getElementById("showIndexCheckbox") as HTMLInputElement;
 	const showDegreeCheckbox = document.getElementById("showDegreeCheckbox") as HTMLInputElement;
 
-	const graphLayoutToggle1 = document.getElementById("graphLayoutToggle1") as HTMLButtonElement;
-	const graphLayoutToggle2 = document.getElementById("graphLayoutToggle2") as HTMLButtonElement;
-	const straightenEdgesButton = document.getElementById("straightenEdgesButton") as HTMLButtonElement;
-
 	showIndexCheckbox.addEventListener("change", showIndex);
 	showDegreeCheckbox.addEventListener("change", showDegree);
-	graphLayoutToggle1.addEventListener("click", clickForceDirect);
-	graphLayoutToggle2.addEventListener("click", clickBezierCurve);
-	straightenEdgesButton.addEventListener("click", straightenEdges);
 
 	// オブジェクト情報の更新
 	function updateInfo(info: GraphInfo): void {
@@ -241,48 +233,79 @@ function setup(): void {
 		redoButton.disabled = !graphManager.canRedo();
 	}
 
-	// 頂点番号を表示
+	// 頂点の番号を表示
 	function showIndex() {
-		graphManager.drawVertexInfo(showIndexCheckbox.checked, showDegreeCheckbox.checked);
+		graphManager.setShowIndex(showIndexCheckbox.checked);
 	}
 
-	// 次数を表示
+	// 頂点の次数を表示
 	function showDegree() {
-		graphManager.drawVertexInfo(showIndexCheckbox.checked, showDegreeCheckbox.checked);
+		graphManager.setShowDegree(showDegreeCheckbox.checked);
 	}
+
+	// ============================================================================
+	// プロパティエリア - レイアウト
+	// ============================================================================
+	const graphLayoutToggle1 = document.getElementById("graphLayoutToggle1") as HTMLButtonElement;
+	const graphLayoutToggle2 = document.getElementById("graphLayoutToggle2") as HTMLButtonElement;
+	const drawEdgeToggle1 = document.getElementById("drawEdgeToggle1") as HTMLButtonElement;
+	const drawEdgeToggle2 = document.getElementById("drawEdgeToggle2") as HTMLButtonElement;
+
+	graphLayoutToggle1.addEventListener("click", clickGraphLayoutForceDirect);
+	graphLayoutToggle2.addEventListener("click", clickGraphLayoutFixed);
+	drawEdgeToggle1.addEventListener("click", clickEdgeDrawingStraightLine);
+	drawEdgeToggle2.addEventListener("click", clickEdgeDrawingBezierCurve);
 
 	// グラフレイアウトの初期値は、力指向とする
 	let graphLayoutMode = GraphLayoutEnum.ForceDirect;
 
 	// グラフレイアウトトグルボタンで、力指向が選択された時の処理
-	function clickForceDirect() {
+	function clickGraphLayoutForceDirect() {
 		graphLayoutMode = GraphLayoutEnum.ForceDirect;
+		// オブジェクト配置モード
 		graphLayoutToggle1.textContent = graphLayoutMode;
 		graphLayoutToggle1.classList.add("active");
 		graphLayoutToggle2.classList.remove("active");
-		straightenEdgesButton.disabled = true;
-		graphManager.changeGraphLayoutMode(graphLayoutMode);
+		graphManager.setGraphLayout(graphLayoutMode);
+		// 辺の描画モード
+		drawEdgeToggle1.disabled = false;
+		drawEdgeToggle1.classList.add("active");
+		drawEdgeToggle2.disabled = true;
+		drawEdgeToggle2.classList.remove("active");
+		graphManager.setEdgeDrawing(EdgeDrawingEnum.straightLine);
 	}
 
-	// グラフレイアウトトグルボタンで、ペジェ曲線が選択された時の処理
-	function clickBezierCurve() {
-		graphLayoutMode = GraphLayoutEnum.BezierCurve;
+	// グラフレイアウトトグルボタンで、固定が選択された時の処理
+	function clickGraphLayoutFixed() {
+		graphLayoutMode = GraphLayoutEnum.Fixed;
+		// オブジェクト配置モード
 		graphLayoutToggle2.textContent = graphLayoutMode;
 		graphLayoutToggle2.classList.add("active");
 		graphLayoutToggle1.classList.remove("active");
-		straightenEdgesButton.disabled = false;
-		graphManager.changeGraphLayoutMode(graphLayoutMode);
+		graphManager.setGraphLayout(graphLayoutMode);
+		// 辺の描画モード
+		drawEdgeToggle1.disabled = false;
+		drawEdgeToggle2.disabled = false;
+		drawEdgeToggle1.classList.add("active");
+		drawEdgeToggle2.classList.remove("active");
 	}
 
-	// すべての辺を直線にする
-	function straightenEdges() {
-		Utils.confirmAction("すべての辺が直線になりますがよろしいですか？", () => {
-			graphManager.straightenEdges();
-		});
+	// 辺の描画トグルボタンで、直線が選択された時の処理
+	function clickEdgeDrawingStraightLine() {
+		drawEdgeToggle1.classList.add("active");
+		drawEdgeToggle2.classList.remove("active");
+		graphManager.setEdgeDrawing(EdgeDrawingEnum.straightLine);
+	}
+
+	// 辺の描画トグルボタンで、直線が選択された時の処理
+	function clickEdgeDrawingBezierCurve() {
+		drawEdgeToggle1.classList.remove("active");
+		drawEdgeToggle2.classList.add("active");
+		graphManager.setEdgeDrawing(EdgeDrawingEnum.bezierCurve);
 	}
 
 	// ============================================================================
-	// エクスポート／インポート処理
+	// プロパティエリア - データの入出力
 	// ============================================================================
 	const exportButton = document.getElementById("exportButton") as HTMLButtonElement;
 	const importButton = document.getElementById("importButton") as HTMLButtonElement;
@@ -350,12 +373,29 @@ function setup(): void {
 	}
 
 	// ============================================================================
+	// 初期値設定
+	// ============================================================================
+	function setInitialValue() {
+		undoButton.disabled = !graphManager.canUndo();
+		redoButton.disabled = !graphManager.canRedo();
+		// 次数配列のトグルボタン
+		clickDegreeArray();
+		// 頂点情報表示のチェックボックス
+		showIndexCheckbox.checked = graphManager.isShowIndex();
+		showDegreeCheckbox.checked = graphManager.isShowDegree();
+		// グラフレイアウトのトグルボタン
+		clickGraphLayoutForceDirect();
+		// 初期グラフ
+		degreesInput.value = "3, 3, 3, 3";
+		blurDegreeSequence();
+		applyDegreeSequence();
+	}
+
+	// ============================================================================
 	// メイン処理
 	// ============================================================================
 	const canvas = document.getElementById("graphCanvas") as HTMLCanvasElement;
 	const graphManager = new GraphManager(canvas, updateDegreeSequence, updateInfo);
-	// 初期グラフ
-	degreesInput.value = "3, 3, 3, 3";
-	blurDegreeSequence();
-	applyDegreeSequence();
+	// 初期設定値
+	setInitialValue();
 }
