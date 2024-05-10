@@ -177,8 +177,8 @@ export class GraphManager {
 		// 選択状態の初期化
 		this.initSelected();
 
-		// 制御点の場合
-		if (control) {
+		// 制御点の場合（ペジェ曲線の場合、選択可能）
+		if (control && this.edgeDrawing === EdgeDrawingEnum.bezierCurve) {
 			// ドラッグ開始
 			this.draggingPoint = control;
 		}
