@@ -177,8 +177,13 @@ export class GraphManager {
 		// 選択状態の初期化
 		this.initSelected();
 
+		// 制御点の場合
+		if (control) {
+			// ドラッグ開始
+			this.draggingPoint = control;
+		}
 		// 頂点の場合
-		if (vertex) {
+		else if (vertex) {
 			if (tempSelectedVertex) {
 				// 選択済み頂点と、異なる頂点が取得できた場合
 				if (tempSelectedVertex !== vertex && this.canAddRemove) {
@@ -193,11 +198,6 @@ export class GraphManager {
 
 			// ドラッグ開始
 			this.draggingPoint = vertex;
-		}
-		// 制御点の場合
-		else if (control) {
-			// ドラッグ開始
-			this.draggingPoint = control;
 		}
 		// 辺の場合
 		else if (edge) {
