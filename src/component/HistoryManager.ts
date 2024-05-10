@@ -8,6 +8,7 @@ import { Vertex } from "../object/Vertex";
 export interface Action {
 	type: ActionType;
 	target: Vertex | Edge;
+	index: number;
 }
 
 // 実行グループのインターフェース

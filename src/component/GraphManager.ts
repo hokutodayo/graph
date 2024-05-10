@@ -364,7 +364,7 @@ export class GraphManager {
 		const vertex = new Vertex(x, y);
 		this.addVertex(vertex);
 		// 履歴スタック
-		this.historyManager.addAction({ type: ActionType.Add, target: vertex });
+		this.historyManager.addAction({ type: ActionType.Add, target: vertex, index: this.vertices.indexOf(vertex) });
 		// 次数配列の更新
 		this.updateDegreeSequence(this.vertices, this.edges);
 	}
@@ -379,14 +379,15 @@ export class GraphManager {
 			const duplicateEdge = this.edges.find((edge) => (edge.from === from && edge.to === to) || (edge.from === to && edge.to === from));
 			// 重複辺は削除
 			if (duplicateEdge) {
+				// 履歴スタック
+				actions.push({ type: ActionType.Delete, target: duplicateEdge, index: this.edges.indexOf(duplicateEdge) });
 				this.deleteEdge(duplicateEdge);
-				actions.push({ type: ActionType.Delete, target: duplicateEdge });
 			}
 			// 新しい辺を追加
 			const edge = new Edge(from, to);
 			this.addEdge(edge);
 			// 履歴スタック
-			actions.push({ type: ActionType.Add, target: edge });
+			actions.push({ type: ActionType.Add, target: edge, index: this.edges.indexOf(edge) });
 			this.historyManager.addGropuedAction({ actions: actions });
 			// 次数配列の更新
 			this.updateDegreeSequence(this.vertices, this.edges);
@@ -395,19 +396,19 @@ export class GraphManager {
 
 	// 頂点を削除するアクション
 	private deleteVertexAction(vertex: Vertex): void {
-		// 実行配列
+		// 履歴配列
 		const actions = [];
-		// 頂点に接続された辺を削除
+		// 配列コピー（削除でindexが変わらないように）
 		const vertexEdges = [...vertex.edges];
 		// 頂点に接続された辺を削除
 		vertexEdges.forEach((edge) => {
+			// 履歴スタック
+			actions.push({ type: ActionType.Delete, target: edge, index: this.edges.indexOf(edge) });
 			this.deleteEdge(edge);
-			actions.push({ type: ActionType.Delete, target: edge });
 		});
-		// 頂点を削除
-		this.deleteVertex(vertex);
 		// 履歴スタック
-		actions.push({ type: ActionType.Delete, target: vertex });
+		actions.push({ type: ActionType.Delete, target: vertex, index: this.vertices.indexOf(vertex) });
+		this.deleteVertex(vertex);
 		this.historyManager.addGropuedAction({ actions: actions });
 		// 次数配列の更新
 		this.updateDegreeSequence(this.vertices, this.edges);
@@ -415,16 +416,16 @@ export class GraphManager {
 
 	// 辺を削除するアクション
 	private deleteEdgeAction(edge: Edge): void {
-		this.deleteEdge(edge);
 		// 履歴スタック
-		this.historyManager.addAction({ type: ActionType.Delete, target: edge });
+		this.historyManager.addAction({ type: ActionType.Delete, target: edge, index: this.edges.indexOf(edge) });
+		this.deleteEdge(edge);
 		// 次数配列の更新
 		this.updateDegreeSequence(this.vertices, this.edges);
 	}
 
 	// 頂点追加
-	private addVertex(vertex: Vertex): void {
-		this.vertices.push(vertex);
+	private addVertex(vertex: Vertex, index: number = this.vertices.length): void {
+		this.vertices.splice(index, 0, vertex);
 	}
 
 	// 頂点削除
@@ -433,8 +434,8 @@ export class GraphManager {
 	}
 
 	// 辺追加
-	private addEdge(edge: Edge): void {
-		this.edges.push(edge);
+	private addEdge(edge: Edge, index: number = this.edges.length): void {
+		this.edges.splice(index, 0, edge);
 		edge.from.addEdge(edge);
 		edge.to.addEdge(edge);
 	}
@@ -468,9 +469,9 @@ export class GraphManager {
 						this.deleteVertex(vertex);
 						break;
 					case ActionType.Delete:
-						this.addVertex(vertex);
+						this.addVertex(vertex, action.index);
 						vertex.edges.forEach((edge) => {
-							this.addEdge(edge);
+							this.addEdge(edge, action.index);
 						});
 						break;
 				}
@@ -482,7 +483,7 @@ export class GraphManager {
 						this.deleteEdge(edge);
 						break;
 					case ActionType.Delete:
-						this.addEdge(edge);
+						this.addEdge(edge, action.index);
 				}
 			}
 		});
@@ -672,10 +673,13 @@ export class GraphManager {
 
 		// 力指向モードによって辺の描画を切り替える
 		if (this.layoutMode === GraphLayoutEnum.Fixed && this.edgeDrawing === EdgeDrawingEnum.bezierCurve) {
-			// ペジェ曲線と、制御点の描画
-			this.edges.forEach((edge) => edge.drawBezier(this.ctx));
-			this.activeEdge && this.edges.includes(this.activeEdge) && this.activeEdge.control.draw(this.ctx);
-			this.draggingPoint instanceof Control && this.draggingPoint.draw(this.ctx);
+			// ペジェ曲線の描画
+			this.edges.forEach((edge) => edge.drawBezier(this.ctx, this.canTransForm));
+			// 制御点の描画
+			if (this.canTransForm) {
+				this.activeEdge && this.edges.includes(this.activeEdge) && this.activeEdge.control.draw(this.ctx);
+				this.draggingPoint instanceof Control && this.draggingPoint.draw(this.ctx);
+			}
 		} else {
 			// 直線の描画
 			this.edges.forEach((edge) => edge.draw(this.ctx));
