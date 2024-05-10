@@ -82,6 +82,9 @@ export class GraphManager {
 	// 頂点情報表示
 	private showIndex: boolean = true;
 	private showDegree: boolean = false;
+	// オブジェクト操作
+	private canTransForm: boolean = true;
+	private canAddRemove: boolean = true;
 
 	constructor(canvas: HTMLCanvasElement, updateDegreeSequence: (vertices: Vertex[], edges: Edge[]) => void, updateInfo: (info: GraphInfo) => void) {
 		this.canvas = canvas;
@@ -110,16 +113,19 @@ export class GraphManager {
 
 	// ダブルクリック
 	private handleDoubleClick(e: MouseEvent): void {
-		this.mouse = this.getMousePosition(e);
-		this.addVertexAction(this.mouse.x, this.mouse.y);
-		this.drawGraph();
+		if (this.canAddRemove) {
+			this.mouse = this.getMousePosition(e);
+			this.addVertexAction(this.mouse.x, this.mouse.y);
+			this.drawGraph();
+		}
 	}
 
 	// マウスムーブ
 	private handleMouseMove(e: MouseEvent): void {
 		this.mouse = this.getMousePosition(e);
+
 		// 頂点か制御点の移動
-		if (this.draggingPoint) {
+		if (this.draggingPoint && this.canTransForm) {
 			this.draggingPoint.x = this.mouse.x;
 			this.draggingPoint.y = this.mouse.y;
 			this.canvas.style.cursor = "move";
@@ -138,7 +144,7 @@ export class GraphManager {
 		// 頂点選択済みの場合
 		else if (this.selectedVertex) {
 			this.canvas.style.cursor = "crosshair";
-		} else {
+		} else if (this.canTransForm) {
 			// 辺の近くの場合
 			const edge = Utils.findEdgeAt(this.mouse.x, this.mouse.y, this.edges);
 			edge && (this.activeEdge = edge);
@@ -175,7 +181,7 @@ export class GraphManager {
 		if (vertex) {
 			if (tempSelectedVertex) {
 				// 選択済み頂点と、異なる頂点が取得できた場合
-				if (tempSelectedVertex !== vertex) {
+				if (tempSelectedVertex !== vertex && this.canAddRemove) {
 					this.addEdgeAction(tempSelectedVertex, vertex);
 				}
 			}
@@ -220,13 +226,20 @@ export class GraphManager {
 
 	// 右クリック
 	private handleContextMenu(e: MouseEvent): void {
+		// コンテキストメニューを表示させない
 		e.preventDefault();
-		this.mouse = this.getMousePosition(e);
-		const vertex = Utils.findVertexAt(this.mouse.x, this.mouse.y, this.vertices);
-		const edge = Utils.findEdgeAt(this.mouse.x, this.mouse.y, this.edges);
 
 		// 選択状態の初期化
 		this.initSelected();
+
+		// 追加削除できない場合は、処理終了
+		if (!this.canAddRemove) {
+			return;
+		}
+
+		this.mouse = this.getMousePosition(e);
+		const vertex = Utils.findVertexAt(this.mouse.x, this.mouse.y, this.vertices);
+		const edge = Utils.findEdgeAt(this.mouse.x, this.mouse.y, this.edges);
 
 		// 削除処理
 		if (vertex) {
@@ -587,6 +600,28 @@ export class GraphManager {
 	// 頂点次数の表示状態を取得
 	public isShowDegree(): boolean {
 		return this.showDegree;
+	}
+
+	// オブジェクトの移動変形可否を取得
+	public getCanTransForm(): boolean {
+		return this.canTransForm;
+	}
+
+	// オブジェクトの移動変形可否をセット
+	public setCanTransForm(canTransForm: boolean): void {
+		this.canTransForm = canTransForm;
+		this.drawGraph();
+	}
+
+	// オブジェクトの追加削除可否を取得
+	public getCanAddRemove(): boolean {
+		return this.canAddRemove;
+	}
+
+	// オブジェクトの追加削除可否をセット
+	public setCanAddRemove(canAddRemove: boolean) {
+		this.canAddRemove = canAddRemove;
+		this.drawGraph();
 	}
 
 	// ============================================================================

@@ -250,11 +250,15 @@ function setup(): void {
 	const graphLayoutToggle2 = document.getElementById("graphLayoutToggle2") as HTMLButtonElement;
 	const drawEdgeToggle1 = document.getElementById("drawEdgeToggle1") as HTMLButtonElement;
 	const drawEdgeToggle2 = document.getElementById("drawEdgeToggle2") as HTMLButtonElement;
+	const canTransFormCheckbox = document.getElementById("canTransFormCheckbox") as HTMLInputElement;
+	const canAddRemoveCheckbox = document.getElementById("canAddRemoveCheckbox") as HTMLInputElement;
 
 	graphLayoutToggle1.addEventListener("click", clickGraphLayoutForceDirect);
 	graphLayoutToggle2.addEventListener("click", clickGraphLayoutFixed);
 	drawEdgeToggle1.addEventListener("click", clickEdgeDrawingStraightLine);
 	drawEdgeToggle2.addEventListener("click", clickEdgeDrawingBezierCurve);
+	canTransFormCheckbox.addEventListener("change", canTransForm);
+	canAddRemoveCheckbox.addEventListener("change", canAddRemove);
 
 	// グラフレイアウトの初期値は、力指向とする
 	let graphLayoutMode = GraphLayoutEnum.ForceDirect;
@@ -273,6 +277,10 @@ function setup(): void {
 		drawEdgeToggle2.disabled = true;
 		drawEdgeToggle2.classList.remove("active");
 		graphManager.setEdgeDrawing(EdgeDrawingEnum.straightLine);
+		// オブジェクト操作
+		canTransFormCheckbox.checked = true;
+		canTransFormCheckbox.disabled = true;
+		graphManager.setCanTransForm(canTransFormCheckbox.checked);
 	}
 
 	// グラフレイアウトトグルボタンで、固定が選択された時の処理
@@ -288,6 +296,8 @@ function setup(): void {
 		drawEdgeToggle2.disabled = false;
 		drawEdgeToggle1.classList.add("active");
 		drawEdgeToggle2.classList.remove("active");
+		// オブジェクト操作
+		canTransFormCheckbox.disabled = false;
 	}
 
 	// 辺の描画トグルボタンで、直線が選択された時の処理
@@ -302,6 +312,16 @@ function setup(): void {
 		drawEdgeToggle1.classList.remove("active");
 		drawEdgeToggle2.classList.add("active");
 		graphManager.setEdgeDrawing(EdgeDrawingEnum.bezierCurve);
+	}
+
+	// オブジェクトの移動変形可否
+	function canTransForm() {
+		graphManager.setCanTransForm(canTransFormCheckbox.checked);
+	}
+
+	// オブジェクトの追加削除可否
+	function canAddRemove() {
+		graphManager.setCanAddRemove(canAddRemoveCheckbox.checked);
 	}
 
 	// ============================================================================
@@ -383,6 +403,9 @@ function setup(): void {
 		// 頂点情報表示のチェックボックス
 		showIndexCheckbox.checked = graphManager.isShowIndex();
 		showDegreeCheckbox.checked = graphManager.isShowDegree();
+		// オブジェクト操作のチェックボックス
+		canTransFormCheckbox.checked = graphManager.getCanTransForm();
+		canAddRemoveCheckbox.checked = graphManager.getCanAddRemove();
 		// グラフレイアウトのトグルボタン
 		clickGraphLayoutForceDirect();
 		// 初期グラフ

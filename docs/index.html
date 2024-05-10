@@ -112,7 +112,6 @@
 						<!-- グラフレイアウト -->
 						<label class="mt-2">オブジェクト配置モード</label>
 						<div>
-							<!-- オブジェクト配置モード -->
 							<div class="btn-group" role="group" aria-label="Toggle Button Group">
 								<button class="btn btn-outline-primary btn-toggle px-0" id="graphLayoutToggle1" type="button" style="width: 100px">力指向</button>
 								<button class="btn btn-outline-primary btn-toggle px-0" id="graphLayoutToggle2" type="button" style="width: 100px">固定</button>
@@ -121,10 +120,22 @@
 
 						<label class="mt-2">辺の描画モード</label>
 						<div>
-							<!-- 辺の描画モード -->
 							<div class="btn-group" role="group" aria-label="Toggle Button Group">
 								<button class="btn btn-outline-primary btn-toggle px-0" id="drawEdgeToggle1" type="button" style="width: 100px">直線</button>
 								<button class="btn btn-outline-primary btn-toggle px-0" id="drawEdgeToggle2" type="button" style="width: 100px">ペジェ曲線</button>
+							</div>
+						</div>
+						<label class="mt-2">オブジェクト操作</label>
+						<div class="form-group">
+							<div class="form-check">
+								<!-- オブジェクト移動変形可否のチェックボックス -->
+								<input class="form-check-input" type="checkbox" id="canTransFormCheckbox" />
+								<label class="form-check-label" for="canTransFormCheckbox">移動、変形 ができる</label>
+							</div>
+							<div class="form-check">
+								<!-- オブジェクト追加削除可否のチェックボックス -->
+								<input class="form-check-input" type="checkbox" id="canAddRemoveCheckbox" />
+								<label class="form-check-label" for="canAddRemoveCheckbox">追加、削除 ができる</label>
 							</div>
 						</div>
 
