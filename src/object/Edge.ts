@@ -67,7 +67,7 @@ export class Edge {
 	}
 
 	// 描画（ペジェ曲線）
-	public drawBezier(ctx: CanvasRenderingContext2D): void {
+	public drawBezier(ctx: CanvasRenderingContext2D, canTransForm: boolean): void {
 		ctx.beginPath();
 		ctx.moveTo(this.from.x, this.from.y);
 		// 二次ベジェ曲線
@@ -77,7 +77,7 @@ export class Edge {
 		ctx.lineWidth = 4;
 		ctx.stroke();
 
-		if (this.isSelected) {
+		if (this.isSelected && canTransForm) {
 			this.control.draw(ctx);
 		}
 	}
