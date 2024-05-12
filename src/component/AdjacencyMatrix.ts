@@ -209,12 +209,12 @@ export class AdjacencyMatrix {
 		// 探索する
 		for (let i = start; i < totalNum; i++) {
 			// 残りの探索数が不足する場合は、探索不要
-			if (count + totalNum - i < 5) {
+			if (count + totalNum - i < selectNum) {
 				break;
 			}
 			// 論理積算出
 			const newIntersection = count === 0 ? adjacencyMasks[i] : selected[count - 1].intersection & adjacencyMasks[i];
-			// 論理積のビット数が５未満は次のindexへ
+			// 論理積のビット数が指定数未満は次のindexへ
 			if (this.getIndicesFromBigInt(newIntersection).length >= selectNum) {
 				selected.push({ index: i, intersection: newIntersection });
 				// 探索深度を増やす
