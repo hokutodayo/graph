@@ -112,7 +112,7 @@ function setup(): void {
 	// 適用ボタンが押された時の処理
 	function applyDegreeSequence(): void {
 		if (graphManager.degreeSequence.vertexCount() > 1000) {
-			Utils.confirmAction("頂点の数が100を超えるグラフは描画できません", () => {});
+			Utils.confirmAction("頂点の数が1000を超えるグラフは描画できません", () => {});
 		} else if (graphManager.degreeSequence.vertexCount() > 500) {
 			Utils.confirmAction("頂点の数が大きいため、描画に数分かかる場合がありますがよろしいですか？", () => {
 				graphManager.createGraphFromMatrix();
