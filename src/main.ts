@@ -156,9 +156,11 @@ function setup(): void {
 	const hasK5Display = document.getElementById("hasK5Display") as HTMLElement;
 	const showIndexCheckbox = document.getElementById("showIndexCheckbox") as HTMLInputElement;
 	const showDegreeCheckbox = document.getElementById("showDegreeCheckbox") as HTMLInputElement;
+	const showGridCheckbox = document.getElementById("showGridCheckbox") as HTMLInputElement;
 
 	showIndexCheckbox.addEventListener("change", showIndex);
 	showDegreeCheckbox.addEventListener("change", showDegree);
+	showGridCheckbox.addEventListener("change", showGrid);
 
 	// オブジェクト情報の更新
 	function updateInfo(info: GraphInfo): void {
@@ -241,6 +243,11 @@ function setup(): void {
 	// 頂点の次数を表示
 	function showDegree() {
 		graphManager.setShowDegree(showDegreeCheckbox.checked);
+	}
+
+	// グリッドを表示
+	function showGrid() {
+		graphManager.setShowGrid(showGridCheckbox.checked);
 	}
 
 	// ============================================================================
@@ -400,9 +407,10 @@ function setup(): void {
 		redoButton.disabled = !graphManager.canRedo();
 		// 次数配列のトグルボタン
 		clickDegreeArray();
-		// 頂点情報表示のチェックボックス
+		// 表示切り替えのチェックボックス
 		showIndexCheckbox.checked = graphManager.isShowIndex();
 		showDegreeCheckbox.checked = graphManager.isShowDegree();
+		showGridCheckbox.checked = graphManager.isShowGrid();
 		// オブジェクト操作のチェックボックス
 		canTransFormCheckbox.checked = graphManager.getCanTransForm();
 		canAddRemoveCheckbox.checked = graphManager.getCanAddRemove();
