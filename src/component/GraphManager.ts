@@ -64,8 +64,8 @@ export class GraphManager {
 	// 履歴管理
 	private historyManager = new HistoryManager();
 	// オブジェクト操作
-	private selectedVertex: Vertex | null = null;
-	private selectedEdge: Edge | null = null;
+	private selectedVertices: Vertex[] = [];
+	private selectedEdges: Edge[] = [];
 	private draggingPoint: Point | null = null;
 	private activeEdge: Edge | null = null;
 	// ズーム機能関連
@@ -142,7 +142,7 @@ export class GraphManager {
 			this.lastPos.y = e.clientY;
 		}
 		// 頂点選択済みの場合
-		else if (this.selectedVertex) {
+		else if (this.selectedVertices.length > 0) {
 			this.canvas.style.cursor = "crosshair";
 		} else if (this.canTransForm) {
 			// 辺の近くの場合
@@ -167,15 +167,19 @@ export class GraphManager {
 		if (e.button !== MouseButtonEnum.Left) {
 			return;
 		}
+		// Shiftキーが押されている場合、選択をトグルする
+		const shiftKey = e.shiftKey;
 
 		this.mouse = this.getMousePosition(e);
 		const vertex = Utils.findVertexAt(this.mouse.x, this.mouse.y, this.vertices);
 		const edge = Utils.findEdgeAt(this.mouse.x, this.mouse.y, this.edges);
 		const control = Utils.findControlAt(this.mouse.x, this.mouse.y, this.edges);
 		// 判定のため一時退避
-		const tempSelectedVertex = this.selectedVertex;
+		const tempSelectedVertices = this.selectedVertices;
 		// 選択状態の初期化
-		this.initSelected();
+		if (!shiftKey) {
+			this.initSelected();
+		}
 
 		// 制御点の場合（ペジェ曲線の場合、選択可能）
 		if (control && this.edgeDrawing === EdgeDrawingEnum.bezierCurve) {
@@ -184,15 +188,23 @@ export class GraphManager {
 		}
 		// 頂点の場合
 		else if (vertex) {
-			if (tempSelectedVertex) {
+			if (!shiftKey) {
+				this.initSelected();
+			}
+			if (this.selectedVertices.includes(vertex)) {
+				vertex.isSelected = false;
+				this.selectedVertices = this.selectedVertices.filter((v) => v !== vertex);
+			} else {
+				// 頂点を選択済みにする
+				vertex.isSelected = true;
+				this.selectedVertices.push(vertex);
+			}
+			if (tempSelectedVertices.length > 0) {
 				// 選択済み頂点と、異なる頂点が取得できた場合
-				if (tempSelectedVertex !== vertex && this.canAddRemove) {
-					this.addEdgeAction(tempSelectedVertex, vertex);
+				if (!tempSelectedVertices.includes(vertex) && this.canAddRemove) {
+					this.addEdgeAction(tempSelectedVertices, vertex);
 				}
 			}
-			// 頂点を選択済みにする
-			vertex.isSelected = true;
-			this.selectedVertex = vertex;
 			// カーソルを選択用に変更
 			this.canvas.style.cursor = "crosshair";
 
@@ -201,9 +213,17 @@ export class GraphManager {
 		}
 		// 辺の場合
 		else if (edge) {
-			// 辺を選択済みにする
-			this.selectedEdge = edge;
-			this.selectedEdge.isSelected = true;
+			if (!shiftKey) {
+				this.initSelected();
+			}
+			if (this.selectedEdges.includes(edge)) {
+				edge.isSelected = false;
+				this.selectedEdges = this.selectedEdges.filter((e) => e !== edge);
+			} else {
+				// 辺を選択済みにする
+				edge.isSelected = true;
+				this.selectedEdges.push(edge);
+			}
 		}
 		// キャンバスの選択
 		else {
@@ -296,10 +316,10 @@ export class GraphManager {
 
 	// 選択状態を初期化する
 	private initSelected(): void {
-		this.selectedVertex && (this.selectedVertex.isSelected = false);
-		this.selectedVertex = null;
-		this.selectedEdge && (this.selectedEdge.isSelected = false);
-		this.selectedEdge = null;
+		this.selectedVertices.forEach((v) => (v.isSelected = false));
+		this.selectedEdges.forEach((e) => (e.isSelected = false));
+		this.selectedVertices = [];
+		this.selectedEdges = [];
 		this.canvas.style.cursor = "default";
 	}
 
@@ -370,24 +390,33 @@ export class GraphManager {
 	}
 
 	// 辺を追加するアクション
-	private addEdgeAction(from: Vertex, to: Vertex): void {
-		// 異なる２頂点か？
-		if (from && to && from !== to) {
-			// 実行配列
-			const actions = [];
-			// 重複辺を取得
-			const duplicateEdge = this.edges.find((edge) => (edge.from === from && edge.to === to) || (edge.from === to && edge.to === from));
-			// 重複辺は削除
-			if (duplicateEdge) {
+	private addEdgeAction(selectedVertices: Vertex[], to: Vertex): void {
+		const actions = [];
+		let isAddEdge = false;
+
+		for (const from of selectedVertices) {
+			// 異なる２頂点か？
+			if (from && to && from !== to) {
+				// 重複辺を取得
+				const duplicateEdge = this.edges.find((edge) => (edge.from === from && edge.to === to) || (edge.from === to && edge.to === from));
+				// 重複辺は削除
+				if (duplicateEdge) {
+					// 履歴スタック
+					actions.push({ type: ActionType.Delete, target: duplicateEdge, index: this.edges.indexOf(duplicateEdge) });
+					this.deleteEdge(duplicateEdge);
+				}
+				// 新しい辺を追加
+				const edge = new Edge(from, to);
+				this.addEdge(edge);
 				// 履歴スタック
-				actions.push({ type: ActionType.Delete, target: duplicateEdge, index: this.edges.indexOf(duplicateEdge) });
-				this.deleteEdge(duplicateEdge);
+				actions.push({ type: ActionType.Add, target: edge, index: this.edges.indexOf(edge) });
+				isAddEdge = true;
 			}
-			// 新しい辺を追加
-			const edge = new Edge(from, to);
-			this.addEdge(edge);
+		}
+
+		// 辺を追加した場合の処理
+		if (isAddEdge) {
 			// 履歴スタック
-			actions.push({ type: ActionType.Add, target: edge, index: this.edges.indexOf(edge) });
 			this.historyManager.addGropuedAction({ actions: actions });
 			// 次数配列の更新
 			this.updateDegreeSequence(this.vertices, this.edges);
