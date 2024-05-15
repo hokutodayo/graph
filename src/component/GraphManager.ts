@@ -819,11 +819,11 @@ export class GraphManager {
 	}
 
 	// ============================================================================
-	// エクスポート／インポート処理
+	// 保存読込処理
 	// ============================================================================
-	// グラフの状態をJSONとしてエクスポート
-	public exportToJson(): string {
-		const exportData = {
+	// グラフの状態をJSONとして保存
+	public saveToJson(): string {
+		const saveData = {
 			vertices: this.vertices.map((vertex, index) => ({
 				id: index,
 				x: vertex.x,
@@ -840,14 +840,14 @@ export class GraphManager {
 			origin: { x: this.origin.x, y: this.origin.y },
 			scale: this.scale,
 		};
-		return JSON.stringify(exportData);
+		return JSON.stringify(saveData);
 	}
 
-	// JSONからグラフの状態をインポート
-	public importFromJson(jsonString: string): void {
-		const importData = JSON.parse(jsonString);
-		this.vertices = importData.vertices.map((vData: any) => new Vertex(vData.x, vData.y));
-		this.edges = importData.edges.map((eData: any) => {
+	// JSONからグラフの状態をロード
+	public loadFromJson(jsonString: string): void {
+		const loadData = JSON.parse(jsonString);
+		this.vertices = loadData.vertices.map((vData: any) => new Vertex(vData.x, vData.y));
+		this.edges = loadData.edges.map((eData: any) => {
 			const fromVertex = this.vertices[eData.from];
 			const toVertex = this.vertices[eData.to];
 			const edge = new Edge(fromVertex, toVertex);
@@ -855,9 +855,9 @@ export class GraphManager {
 			edge.control.y = eData.control.y;
 			return edge;
 		});
-		this.origin = importData.origin;
-		this.scale = importData.scale;
-		this.currentZoomIndex = this.zoomLevels.indexOf(importData.scale);
+		this.origin = loadData.origin;
+		this.scale = loadData.scale;
+		this.currentZoomIndex = this.zoomLevels.indexOf(loadData.scale);
 		// 次数配列の更新
 		this.updateDegreeSequence(this.vertices, this.edges);
 		this.drawGraph();

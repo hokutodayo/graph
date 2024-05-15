@@ -334,18 +334,18 @@ function setup(): void {
 	// ============================================================================
 	// プロパティエリア - データの入出力
 	// ============================================================================
-	const exportButton = document.getElementById("exportButton") as HTMLButtonElement;
-	const importButton = document.getElementById("importButton") as HTMLButtonElement;
-	const importFileInput = document.getElementById("importFileInput") as HTMLInputElement;
+	const saveButton = document.getElementById("saveButton") as HTMLButtonElement;
+	const loadButton = document.getElementById("loadButton") as HTMLButtonElement;
+	const loadFileInput = document.getElementById("loadFileInput") as HTMLInputElement;
 
-	exportButton.addEventListener("click", exportJson);
-	importButton.addEventListener("click", uploadJson);
-	importFileInput.addEventListener("change", importJson);
+	saveButton.addEventListener("click", save);
+	loadButton.addEventListener("click", uploadJson);
+	loadFileInput.addEventListener("change", load);
 
-	// エクスポートボタンが押下されたら、エクスポートする
-	function exportJson(e: Event) {
+	// 保存ボタンが押下された
+	function save(e: Event) {
 		// データ取得
-		const jsonData = graphManager.exportToJson();
+		const jsonData = graphManager.saveToJson();
 		// ファイル名
 		const date = new Date();
 		const timestamp =
@@ -367,11 +367,11 @@ function setup(): void {
 
 	// ボタンがクリックされたら、ファイル入力をトリガーする
 	function uploadJson() {
-		importFileInput.click();
+		loadFileInput.click();
 	}
 
-	// ファイルが入力されたら、インポートする
-	function importJson(e: Event) {
+	// ファイルが入力されたら、ロードする
+	function load(e: Event) {
 		const file = (e.target! as HTMLInputElement).files![0];
 		if (file) {
 			const reader = new FileReader();
@@ -380,10 +380,10 @@ function setup(): void {
 			reader.onload = function (event) {
 				const content = (event.target! as FileReader).result as string;
 				try {
-					// 読み込んだJSONデータでグラフをインポート
-					graphManager.importFromJson(content);
+					// 読み込んだJSONデータでグラフをロード
+					graphManager.loadFromJson(content);
 				} catch (error) {
-					Utils.errorAction("JSONデータのインポート中にエラーが発生しました: " + (error as Error).message);
+					Utils.errorAction("JSONデータのロード中にエラーが発生しました: " + (error as Error).message);
 				}
 			};
 
@@ -395,7 +395,7 @@ function setup(): void {
 			// ファイルをテキストとして読み込む
 			reader.readAsText(file);
 			// ファイル入力をリセット
-			importFileInput.value = "";
+			loadFileInput.value = "";
 		}
 	}
 
